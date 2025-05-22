@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rahul's Quiz Hub</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #FFF7ED; /* Very light saffron/peach background */
+            color: #4A3B31; /* Dark brown text for contrast */
+            margin: 0;
+            padding: 0;
+        }
+        .page {
+            display: none;
+            padding: 2rem;
+            animation: fadeIn 0.5s ease-in-out;
+        }
+        .page.active {
+            display: block;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        header {
+            /* Reverted to previous purple gradient */
+            background-image: linear-gradient(to right, #4f46e5, #6366f1, #818cf8);
+            color: white;
+            padding: 1.5rem 2rem;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            /* Reverted to previous purple border */
+            border-bottom: 3px solid #3730a3;
+        }
+        header h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            margin: 0;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.2);
+        }
+        nav a {
+            color: white;
+            margin-left: 1.5rem;
+            text-decoration: none;
+            font-weight: 500;
+            padding: 0.6rem 1rem;
+            border-radius: 0.5rem;
+            transition: background-color 0.2s ease, transform 0.2s ease;
+        }
+        nav a:hover, nav a.active-nav {
+            /* Reverted to previous purple hover/active */
+            background-color: #3730a3;
+            transform: translateY(-2px);
+        }
+        .container {
+            max-width: 900px;
+            margin: 2rem auto;
+            background-color: #ffffff;
+            border-radius: 1rem;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1), 0 6px 10px rgba(0,0,0,0.04);
+            padding: 0;
+            overflow: hidden;
+        }
+        .card {
+            background-color: #fffcf7; /* Lighter cream for cards */
+            border: 1px solid #FDE8D8; /* Light saffron border */
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        .card h2 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #D35400; /* Rich orange for card titles */
+            margin-top: 0;
+            margin-bottom: 1rem;
+        }
+        .card p {
+            color: #59493E; /* Brownish text for card content */
+            line-height: 1.6;
+        }
+        .button-primary {
+            background-color: #FF9933; /* Main Saffron/Orange */
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            text-decoration: none;
+            font-weight: 600;
+            display: inline-block;
+            transition: background-color 0.2s ease, transform 0.2s ease;
+            border: none;
+            cursor: pointer;
+            box-shadow: 0 2px 5px rgba(255, 153, 51, 0.4);
+        }
+        .button-primary:hover {
+            background-color: #E67E22; /* Darker Saffron/Orange */
+            transform: translateY(-1px);
+        }
+
+        /* Styles for the quiz page itself */
+        #page-quiz-view .question-block { margin-bottom: 1.5rem; padding: 1.25rem; background-color: #FFFBF5; border-radius: 0.75rem; border: 1px solid #FCE5CD; }
+        #page-quiz-view .question-text { font-size: 1.125rem; font-weight: 600; margin-bottom: 1rem; color: #BF5700; } /* Darker orange for question text */
+        #page-quiz-view .option-label { display: flex; align-items: center; padding: 0.75rem 1rem; margin-bottom: 0.5rem; border-radius: 0.5rem; cursor: pointer; transition: background-color 0.2s ease-in-out, border-color 0.2s ease-in-out; border: 1px solid #FADCB9; color: #59493E; }
+        #page-quiz-view .option-label:hover { background-color: #FFE8CC; border-color: #FFB366; }
+        #page-quiz-view .option-label input[type="radio"] { margin-right: 0.75rem; accent-color: #FF9933; } /* Saffron accent */
+        #page-quiz-view .submit-button, #page-quiz-view .gemini-button { background-color: #FF9933; color: white; padding: 0.75rem 1.5rem; border-radius: 0.75rem; font-weight: 600; cursor: pointer; transition: background-color 0.2s ease-in-out, transform 0.2s ease; width: 100%; margin-top: 1.5rem; border: none; box-shadow: 0 2px 5px rgba(255, 153, 51, 0.4); }
+        #page-quiz-view .submit-button:hover, #page-quiz-view .gemini-button:hover { background-color: #E67E22; transform: translateY(-1px); }
+        #page-quiz-view .gemini-explain-button { background-color: #FFA750; /* Lighter orange for explain button */ color: white; padding: 0.5rem 1rem; border-radius: 0.5rem; font-weight: 500; cursor: pointer; transition: background-color 0.2s ease-in-out, transform 0.2s ease; margin-top: 0.75rem; border: none; font-size: 0.875rem; box-shadow: 0 2px 5px rgba(255, 167, 80, 0.3); }
+        #page-quiz-view .gemini-explain-button:hover { background-color: #FF8C21; transform: translateY(-1px); }
+        #page-quiz-view .gemini-explain-button:disabled, #page-quiz-view .gemini-button:disabled { background-color: #FADCB9; color: #A88771; cursor: not-allowed; box-shadow: none; transform: none;}
+        #page-quiz-view .result-section { margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid #FDE8D8; }
+        #page-quiz-view .score-text { font-size: 1.5rem; font-weight: 700; color: #27AE60; text-align: center; margin-bottom: 1.5rem; } /* Kept green for score, good contrast */
+        #page-quiz-view .solution-title { font-size: 1.25rem; font-weight: 600; color: #D35400; margin-bottom: 1rem; }
+        #page-quiz-view .solution-item { margin-bottom: 1rem; padding: 1rem; border-radius: 0.75rem; background-color: #FEF5ED; border: 1px solid #FCE5CD; } /* Light saffron for solution item */
+        #page-quiz-view .solution-item .question-text { font-size: 1rem; font-weight: 600; color: #BF5700; margin-bottom: 0.5rem; }
+        #page-quiz-view .solution-item .correct-answer { font-weight: 600; color: #27AE60; } /* Kept green */
+        #page-quiz-view .solution-item .your-answer { font-weight: 600; color: #E74C3C; } /* Kept red */
+        #page-quiz-view .correct-option { background-color: #E8F8F5 !important; border-color: #A3E4D7 !important; } /* Light green for correct, distinct */
+        #page-quiz-view .wrong-option { background-color: #FDEDEC !important; border-color: #F5B7B1 !important; } /* Light red for wrong, distinct */
+        #page-quiz-view .selected-correct { background-color: #E8F8F5 !important; border-color: #A3E4D7 !important; }
+        #page-quiz-view .selected-wrong { background-color: #FDEDEC !important; border-color: #F5B7B1 !important; }
+        #page-quiz-view .gemini-explanation, #page-quiz-view .gemini-summary { margin-top: 1rem; padding: 1rem; background-color: #FFF0E1; border-radius: 0.5rem; border: 1px solid #FFDAB8; font-size: 0.95rem; color: #8C4A08; white-space: pre-wrap; } /* Saffron based for Gemini content */
+        #page-quiz-view .loading-indicator { display: inline-block; margin-left: 0.5rem; font-style: italic; color: #A88771; }
+        #page-quiz-view .quiz-title { text-align: center; font-size: 1.875rem; font-weight: bold; margin-bottom: 2rem; color: #D35400;}
+
+        /* Celebration Modal */
+        .celebration-modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+        .celebration-modal-overlay.visible {
+            opacity: 1;
+            visibility: visible;
+        }
+        .celebration-modal-content {
+            background-color: white;
+            padding: 2rem 3rem;
+            border-radius: 1rem;
+            text-align: center;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            transform: scale(0.7);
+            transition: transform 0.3s ease-out;
+        }
+        .celebration-modal-overlay.visible .celebration-modal-content {
+            transform: scale(1);
+        }
+        .celebration-modal-content h3 {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #FF9933; /* Saffron title for modal - keeping this as it's a pop-up */
+            margin-bottom: 0.5rem;
+        }
+        .celebration-modal-content p {
+            font-size: 1.125rem;
+            color: #59493E;
+        }
+        .confetti {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            opacity: 0.8;
+            border-radius: 50%;
+            animation: fall 3s linear infinite;
+        }
+        @keyframes fall {
+            to {
+                transform: translateY(100vh) rotate(360deg);
+                opacity: 0;
+            }
+        }
+
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>Rahul's Quiz Hub</h1>
+        <nav>
+            <a href="#" onclick="showPage('page-home', this)" class="active-nav">Home</a>
+            <a href="#" onclick="showPage('page-quiz-list', this)">Quizzes</a>
+        </nav>
+    </header>
+
+    <div class="container">
+        <section id="page-home" class="page active">
+            <div class="card">
+                <h2>Welcome to Rahul's Quiz Hub!</h2>
+                <p>Test your knowledge with our engaging quizzes. Explore various topics and challenge yourself. Our quizzes are designed to be fun and educational, with AI-powered explanations to help you learn more.</p>
+                <p>Ready to start? Click the button below to see the list of available quizzes.</p>
+                <button class="button-primary" onclick="navigateToQuizList()">Browse Quizzes</button>
+            </div>
+            <div class="card">
+                <h2>Featured Quiz</h2>
+                <p>Dive into the rich history and philosophies of Buddhism and Jainism. This quiz covers key figures, concepts, and events related to these ancient Indian religions.</p>
+                <button class="button-primary" onclick="loadAndShowQuiz('buddhism_jainism', 'Rahul\'s Quiz: Buddhism & Jainism')">Start Buddhism & Jainism Quiz</button>
+            </div>
+        </section>
+
+        <section id="page-quiz-list" class="page">
+            <div class="card">
+                <h2>Available Quizzes</h2>
+                <p>Choose a quiz from the list below to get started.</p>
+                <ul>
+                    <li class="mb-4">
+                        <h3 class="text-xl font-semibold text-gray-700" style="color: #D35400;">Buddhism & Jainism</h3>
+                        <p class="text-gray-600 my-2" style="color: #59493E;">Test your knowledge on the founders, scriptures, councils, and core tenets of Buddhism and Jainism. Ideal for SSC CGL aspirants and history enthusiasts.</p>
+                        <button class="button-primary" onclick="loadAndShowQuiz('buddhism_jainism', 'Rahul\'s Quiz: Buddhism & Jainism')">Start Quiz</button>
+                    </li>
+                    <li class="mb-4">
+                        <h3 class="text-xl font-semibold text-gray-700" style="color: #D35400;">More Quizzes Coming Soon!</h3>
+                        <p class="text-gray-600 my-2" style="color: #59493E;">We are working on adding more exciting quizzes on various topics. Stay tuned!</p>
+                    </li>
+                </ul>
+            </div>
+        </section>
+
+        <section id="page-quiz-view" class="page">
+            <h2 id="quizViewTitle" class="quiz-title"></h2>
+            <form id="quizFormContainer">
+                </form>
+            <button id="submitQuizBtn" class="submit-button">Submit Quiz</button>
+
+            <div id="quizResultSection" class="result-section hidden">
+                <h2 class="score-text"></h2>
+                <h3 class="solution-title">Solutions:</h3>
+                <div id="solutionsContainer">
+                    </div>
+                <button id="summarizeDifferencesBtn" class="gemini-button mt-6">
+                    ✨ Summarize Key Differences (Buddhism vs. Jainism)
+                    <span class="loading-indicator hidden">Loading...</span>
+                </button>
+                <div id="differencesSummaryContainer" class="gemini-summary hidden mt-4"></div>
+            </div>
+        </section>
+    </div>
+
+    <div id="celebrationModal" class="celebration-modal-overlay">
+        <div class="celebration-modal-content">
+            <h3>🎉 Well Done! 🎉</h3>
+            <p>Your results are ready.</p>
+            <div class="confetti" style="left: 10%; top: -20px; background-color: #FFD700; animation-delay: 0s;"></div>
+            <div class="confetti" style="left: 30%; top: -20px; background-color: #FFA500; animation-delay: 0.2s;"></div>
+            <div class="confetti" style="left: 50%; top: -20px; background-color: #FF8C00; animation-delay: 0.4s;"></div>
+            <div class="confetti" style="left: 70%; top: -20px; background-color: #FF7F50; animation-delay: 0.6s;"></div>
+            <div class="confetti" style="left: 90%; top: -20px; background-color: #FF6347; animation-delay: 0.8s;"></div>
+        </div>
+    </div>
+
+    <script>
+        // --- DOM Elements ---
+        const navLinks = document.querySelectorAll('nav a');
+        const pages = document.querySelectorAll('.page');
+        const quizViewTitleEl = document.getElementById('quizViewTitle');
+        const quizFormContainerEl = document.getElementById('quizFormContainer');
+        const submitQuizBtnEl = document.getElementById('submitQuizBtn');
+        const quizResultSectionEl = document.getElementById('quizResultSection');
+        const scoreTextEl = quizResultSectionEl.querySelector('.score-text');
+        const solutionsContainerEl = document.getElementById('solutionsContainer');
+        const summarizeDifferencesBtnEl = document.getElementById('summarizeDifferencesBtn');
+        const differencesSummaryContainerEl = document.getElementById('differencesSummaryContainer');
+        const celebrationModalEl = document.getElementById('celebrationModal');
+
+        let currentQuizQuestions = [];
+
+        // --- Page Navigation Logic ---
+        function showPage(pageId, clickedLink) {
+            pages.forEach(page => page.classList.remove('active'));
+            const targetPage = document.getElementById(pageId);
+            if (targetPage) targetPage.classList.add('active');
+
+            navLinks.forEach(link => link.classList.remove('active-nav'));
+            if (clickedLink) {
+                clickedLink.classList.add('active-nav');
+            } else {
+                const activeNavLink = document.querySelector(`nav a[onclick*="${pageId}"]`);
+                if (activeNavLink) activeNavLink.classList.add('active-nav');
+            }
+        }
+
+        function navigateToQuizList() {
+            showPage('page-quiz-list', document.querySelector('nav a[onclick*="page-quiz-list"]'));
+        }
+
+        // --- Quiz Data Store ---
+        const quizBank = {
+            buddhism_jainism: {
+                title: "Rahul's Quiz: Buddhism & Jainism",
+                data: [
+                    { question: "Who was the founder of Buddhism?", options: ["Mahavira", "Gautama Buddha", "Ashoka", "Bimbisara"], correctAnswerIndex: 1 },
+                    { question: "Where did Gautama Buddha attain enlightenment?", options: ["Sarnath", "Bodh Gaya", "Lumbini", "Kushinagar"], correctAnswerIndex: 1 },
+                    { question: "What is the sacred text of Jainism?", options: ["Tripitakas", "Angas", "Vedas", "Upanishads"], correctAnswerIndex: 1 },
+                    { question: "Which of the following is NOT one of the Four Noble Truths of Buddhism?", options: ["Suffering exists", "The origin of suffering is attachment", "Suffering can be ended", "The path to eternal life"], correctAnswerIndex: 3 },
+                    { question: "Mahavira, the 24th Tirthankara of Jainism, was born in which place?", options: ["Pataliputra", "Vaishali", "Kapilavastu", "Rajagriha"], correctAnswerIndex: 1 },
+                    { question: "The concept of 'Ahimsa' (non-violence) is central to which religion?", options: ["Buddhism", "Jainism", "Hinduism", "Sikhism"], correctAnswerIndex: 1 },
+                    { question: "What is the Buddhist term for the ultimate goal of liberation from suffering?", options: ["Moksha", "Nirvana", "Samadhi", "Karma"], correctAnswerIndex: 1 },
+                    { question: "Digambara and Svetambara are the two main sects of which religion?", options: ["Buddhism", "Jainism", "Sikhism", "Hinduism"], correctAnswerIndex: 1 },
+                    { question: "The First Buddhist Council was held at which place?", options: ["Vaishali", "Pataliputra", "Rajagriha", "Kashmir"], correctAnswerIndex: 2 },
+                    { question: "Which of the following is associated with Jainism?", options: ["Eightfold Path", "Triratnas (Three Jewels)", "Four Noble Truths", "Panchsheel"], correctAnswerIndex: 1 },
+                    { question: "What is the meaning of 'Buddha'?", options: ["Enlightened One", "Great Teacher", "Prince", "Ascetic"], correctAnswerIndex: 0 },
+                    { question: "The Jataka tales are related to the previous births of whom?", options: ["Mahavira", "Gautama Buddha", "Ashoka", "Chandragupta Maurya"], correctAnswerIndex: 1 },
+                    { question: "Which language was used to write the early Buddhist texts?", options: ["Sanskrit", "Pali", "Prakrit", "Magadhi"], correctAnswerIndex: 1 },
+                    { question: "What is the concept of 'Karma' in Buddhism?", options: ["Destiny", "Action and its consequences", "Rebirth", "Suffering"], correctAnswerIndex: 1 },
+                    { question: "Who was the mother of Mahavira?", options: ["Maya", "Trishala", "Yashodhara", "Devaki"], correctAnswerIndex: 1 },
+                    { question: "The term 'Tirthankara' is associated with which religion?", options: ["Buddhism", "Jainism", "Hinduism", "Sikhism"], correctAnswerIndex: 1 },
+                    { question: "What is the 'Middle Path' in Buddhism?", options: ["A path between extremes of indulgence and asceticism", "A path to wealth", "A path to power", "A path to knowledge"], correctAnswerIndex: 0 },
+                    { question: "Which of the following is a Jain festival?", options: ["Diwali", "Mahavir Jayanti", "Holi", "Eid"], correctAnswerIndex: 1 },
+                    { question: "Where did Gautama Buddha deliver his first sermon?", options: ["Bodh Gaya", "Sarnath", "Lumbini", "Kushinagar"], correctAnswerIndex: 1 },
+                    { question: "What is the 'Anatta' concept in Buddhism?", options: ["Self", "No-self or non-self", "Soul", "Consciousness"], correctAnswerIndex: 1 },
+                    { question: "The Sanchi Stupa is a famous monument related to which religion?", options: ["Jainism", "Buddhism", "Hinduism", "Sikhism"], correctAnswerIndex: 1 },
+                    { question: "What is the meaning of 'Jina' in Jainism?", options: ["Conqueror", "Teacher", "God", "Liberated Soul"], correctAnswerIndex: 0 },
+                    { question: "Which of the following is NOT a part of the 'Triratnas' (Three Jewels) of Jainism?", options: ["Right Faith", "Right Knowledge", "Right Conduct", "Right Speech"], correctAnswerIndex: 3 },
+                    { question: "The concept of 'Syadvada' (theory of 'may be') is associated with which philosophy?", options: ["Buddhism", "Jainism", "Charvaka", "Nyaya"], correctAnswerIndex: 1 },
+                    { question: "Who was the last Tirthankara of Jainism?", options: ["Rishabhanatha", "Parshvanatha", "Mahavira", "Ajitnath"], correctAnswerIndex: 2 },
+                    { question: "The term 'Sangha' in Buddhism refers to what?", options: ["Monastery", "Community of monks and nuns", "Sacred text", "Place of worship"], correctAnswerIndex: 1 },
+                    { question: "Which Mauryan emperor converted to Buddhism?", options: ["Chandragupta Maurya", "Bindusara", "Ashoka", "Brihadratha"], correctAnswerIndex: 2 },
+                    { question: "What is the 'Vinaya Pitaka' in Buddhism?", options: ["Collection of Buddha's sermons", "Rules for monastic discipline", "Philosophical discourses", "Stories of Buddha's past lives"], correctAnswerIndex: 1 },
+                    { question: "The concept of 'Anicca' (impermanence) is a core doctrine of which religion?", options: ["Jainism", "Buddhism", "Hinduism", "Sikhism"], correctAnswerIndex: 1 },
+                    { question: "Where did Mahavira attain 'Kaivalya' (omniscience)?", options: ["Pava", "Vaishali", "Kundagrama", "Rajagriha"], correctAnswerIndex: 0 },
+                    { question: "What is the 'Stupa' in Buddhist architecture?", options: ["A temple", "A dwelling for monks", "A mound containing relics", "A prayer hall"], correctAnswerIndex: 2 },
+                    { question: "The 'Kalpa Sutra' is an important text of which religion?", options: ["Buddhism", "Jainism", "Hinduism", "Sikhism"], correctAnswerIndex: 1 },
+                    { question: "Which of the following is NOT one of the 'Panch Mahavratas' (Five Great Vows) of Jainism?", options: ["Ahimsa (non-violence)", "Satya (truthfulness)", "Asteya (non-stealing)", "Dharma (righteousness)"], correctAnswerIndex: 3 },
+                    { question: "The 'Chaitya' in Buddhist architecture refers to what?", options: ["A monastery", "A stupa", "A prayer hall", "A dwelling for monks"], correctAnswerIndex: 2 },
+                    { question: "What was the original name of Gautama Buddha?", options: ["Devadatta", "Siddhartha", "Ananda", "Rahula"], correctAnswerIndex: 1 },
+                    { question: "The concept of 'Anekantavada' (non-absolutism) is a key principle of which religion?", options: ["Buddhism", "Jainism", "Hinduism", "Sikhism"], correctAnswerIndex: 1 },
+                    { question: "Which Buddhist text contains the discourses of Buddha?", options: ["Vinaya Pitaka", "Sutta Pitaka", "Abhidhamma Pitaka", "Jataka Tales"], correctAnswerIndex: 1 },
+                    { question: "The 'Shwetambara' sect of Jainism wears what color clothes?", options: ["Red", "White", "Black", "Yellow"], correctAnswerIndex: 1 },
+                    { question: "What is the Buddhist term for suffering?", options: ["Nirvana", "Dukkha", "Karma", "Anatta"], correctAnswerIndex: 1 },
+                    { question: "The 'Digambara' sect of Jainism practices what?", options: ["Wearing white clothes", "Complete nudity", "Wearing saffron robes", "Wearing black clothes"], correctAnswerIndex: 1 },
+                    { question: "Which of the following is considered the birthplace of Gautama Buddha?", options: ["Sarnath", "Bodh Gaya", "Lumbini", "Kushinagar"], correctAnswerIndex: 2 },
+                    { question: "The 'Theravada' school of Buddhism is primarily practiced in which region?", options: ["Tibet", "China", "Southeast Asia (e.g., Sri Lanka, Thailand)", "Japan"], correctAnswerIndex: 2 },
+                    { question: "What is the 'Parinirvana' of Buddha?", options: ["His birth", "His enlightenment", "His first sermon", "His death"], correctAnswerIndex: 3 },
+                    { question: "The 'Mahayana' school of Buddhism emphasizes what concept?", options: ["Individual liberation", "Bodhisattvas and compassion", "Strict monastic rules", "Austerity"], correctAnswerIndex: 1 },
+                    { question: "Who was the first Tirthankara of Jainism?", options: ["Mahavira", "Parshvanatha", "Rishabhanatha", "Ajitnath"], correctAnswerIndex: 2 },
+                    { question: "The 'Viharas' in Buddhism are what?", options: ["Stupas", "Prayer halls", "Monasteries or dwelling places for monks", "Temples"], correctAnswerIndex: 2 },
+                    { question: "What is the primary purpose of the 'Eightfold Path' in Buddhism?", options: ["To achieve wealth", "To end suffering and achieve Nirvana", "To gain political power", "To live a long life"], correctAnswerIndex: 1 },
+                    { question: "The concept of 'Sallekhana' (fast unto death) is practiced in which religion?", options: ["Buddhism", "Jainism", "Hinduism", "Sikhism"], correctAnswerIndex: 1 },
+                    { question: "Which of the following is a common symbol in Buddhism?", options: ["Swastika", "Om", "Dharma Chakra (Wheel of Law)", "Trishul"], correctAnswerIndex: 2 },
+                    { question: "The 'Ajivika' sect was a contemporary of which two major religions?", options: ["Hinduism and Sikhism", "Buddhism and Jainism", "Christianity and Islam", "Zoroastrianism and Judaism"], correctAnswerIndex: 1 }
+                ]
+            }
+        };
+
+        // --- Gemini API Integration ---
+        const geminiApiKey = "";
+        const geminiApiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${geminiApiKey}`;
+
+        async function callGeminiAPI(prompt, buttonElement, loadingIndicatorElement, targetDiv) {
+            if (buttonElement) buttonElement.disabled = true;
+            if (loadingIndicatorElement) loadingIndicatorElement.classList.remove('hidden');
+            if (targetDiv) {
+                targetDiv.innerHTML = '';
+                targetDiv.classList.add('hidden');
+            }
+
+            let chatHistory = [{ role: "user", parts: [{ text: prompt }] }];
+            const payload = { contents: chatHistory };
+
+            try {
+                const response = await fetch(geminiApiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                if (!response.ok) {
+                    const errorBody = await response.text();
+                    throw new Error(`API request failed with status ${response.status}: ${response.statusText}. Body: ${errorBody}`);
+                }
+                const result = await response.json();
+
+                if (result.candidates && result.candidates.length > 0 &&
+                    result.candidates[0].content && result.candidates[0].content.parts &&
+                    result.candidates[0].content.parts.length > 0) {
+                    const text = result.candidates[0].content.parts[0].text;
+                    if (targetDiv) {
+                        targetDiv.innerHTML = text.replace(/\n/g, '<br>');
+                        targetDiv.classList.remove('hidden');
+                    }
+                } else {
+                    console.error("Unexpected API response structure:", result);
+                    if (targetDiv) {
+                        targetDiv.innerHTML = "Sorry, couldn't get an explanation at this time. The response from the AI was not as expected.";
+                        targetDiv.classList.remove('hidden');
+                    }
+                }
+            } catch (error) {
+                console.error('Error calling Gemini API:', error);
+                if (targetDiv) {
+                    targetDiv.innerHTML = `Sorry, an error occurred while fetching the explanation: ${error.message}. Please check the console for more details.`;
+                    targetDiv.classList.remove('hidden');
+                }
+            } finally {
+                if (buttonElement) buttonElement.disabled = false;
+                if (loadingIndicatorElement) loadingIndicatorElement.classList.add('hidden');
+            }
+        }
+
+        // --- Quiz Logic ---
+        function loadAndShowQuiz(quizId, quizTitle) {
+            const quiz = quizBank[quizId];
+            if (!quiz) {
+                console.error("Quiz not found:", quizId);
+                return;
+            }
+            currentQuizQuestions = quiz.data;
+            quizViewTitleEl.textContent = quizTitle || quiz.title;
+            renderQuizQuestions();
+            resetQuizState();
+            showPage('page-quiz-view');
+        }
+
+        function renderQuizQuestions() {
+            quizFormContainerEl.innerHTML = '';
+            currentQuizQuestions.forEach((q, index) => {
+                const questionBlock = document.createElement('div');
+                questionBlock.className = 'question-block';
+                questionBlock.id = `question-${index}`;
+
+                const questionTextElement = document.createElement('p');
+                questionTextElement.className = 'question-text';
+                questionTextElement.textContent = `${index + 1}. ${q.question}`;
+                questionBlock.appendChild(questionTextElement);
+
+                q.options.forEach((option, optionIndex) => {
+                    const label = document.createElement('label');
+                    label.className = 'option-label';
+                    const radioInput = document.createElement('input');
+                    radioInput.type = 'radio';
+                    radioInput.name = `question${index}`;
+                    radioInput.value = optionIndex;
+                    label.appendChild(radioInput);
+                    label.appendChild(document.createTextNode(option));
+                    questionBlock.appendChild(label);
+                });
+                quizFormContainerEl.appendChild(questionBlock);
+            });
+        }
+
+        function resetQuizState() {
+            quizResultSectionEl.classList.add('hidden');
+            solutionsContainerEl.innerHTML = '';
+            differencesSummaryContainerEl.innerHTML = '';
+            differencesSummaryContainerEl.classList.add('hidden');
+            submitQuizBtnEl.classList.remove('hidden');
+            submitQuizBtnEl.disabled = false;
+            const summaryLoadingIndicator = summarizeDifferencesBtnEl.querySelector('.loading-indicator');
+            if(summaryLoadingIndicator) summaryLoadingIndicator.classList.add('hidden');
+            summarizeDifferencesBtnEl.disabled = false;
+        }
+
+        function showCelebration() {
+            celebrationModalEl.classList.add('visible');
+            setTimeout(() => {
+                celebrationModalEl.classList.remove('visible');
+                quizResultSectionEl.classList.remove('hidden');
+                quizResultSectionEl.scrollIntoView({ behavior: 'smooth' });
+            }, 2500);
+        }
+
+        function handleSubmitQuiz() {
+            let score = 0;
+            solutionsContainerEl.innerHTML = '';
+
+            currentQuizQuestions.forEach((q, index) => {
+                const questionBlock = document.getElementById(`question-${index}`);
+                const selectedOptionInput = quizFormContainerEl.querySelector(`input[name="question${index}"]:checked`);
+                const optionsLabels = questionBlock.querySelectorAll('.option-label');
+                let userAnswerIndex = -1;
+                if (selectedOptionInput) {
+                    userAnswerIndex = parseInt(selectedOptionInput.value);
+                }
+                const isCorrect = (userAnswerIndex === q.correctAnswerIndex);
+                if (isCorrect) score++;
+
+                optionsLabels.forEach((label, optionIdx) => {
+                    label.classList.remove('selected-correct', 'selected-wrong', 'correct-option', 'wrong-option');
+                    if (optionIdx === q.correctAnswerIndex) label.classList.add('correct-option');
+                    if (optionIdx === userAnswerIndex) label.classList.add(isCorrect ? 'selected-correct' : 'selected-wrong');
+                });
+
+                const solutionItem = document.createElement('div');
+                solutionItem.className = 'solution-item';
+                const solutionQuestionText = document.createElement('p');
+                solutionQuestionText.className = 'question-text';
+                solutionQuestionText.textContent = `${index + 1}. ${q.question}`;
+                solutionItem.appendChild(solutionQuestionText);
+                const correctAnswerText = document.createElement('p');
+                correctAnswerText.className = 'correct-answer';
+                correctAnswerText.textContent = `Correct Answer: ${q.options[q.correctAnswerIndex]}`;
+                solutionItem.appendChild(correctAnswerText);
+
+                if (userAnswerIndex !== -1) {
+                    const yourAnswerText = document.createElement('p');
+                    yourAnswerText.textContent = `Your Answer: ${q.options[userAnswerIndex]}`;
+                    if (!isCorrect) yourAnswerText.classList.add('your-answer');
+                    solutionItem.appendChild(yourAnswerText);
+                } else {
+                    const noAnswerText = document.createElement('p');
+                    noAnswerText.textContent = `Your Answer: Not Attempted`;
+                    noAnswerText.classList.add('your-answer');
+                    solutionItem.appendChild(noAnswerText);
+                }
+
+                const explanationButton = document.createElement('button');
+                explanationButton.className = 'gemini-explain-button';
+                explanationButton.textContent = '✨ Get Deeper Explanation';
+                const loadingIndicator = document.createElement('span');
+                loadingIndicator.className = 'loading-indicator hidden';
+                loadingIndicator.textContent = 'Loading...';
+                explanationButton.appendChild(loadingIndicator);
+                const explanationDiv = document.createElement('div');
+                explanationDiv.className = 'gemini-explanation hidden';
+                explanationButton.addEventListener('click', () => {
+                    const prompt = `Provide a concise explanation for the following quiz question and its correct answer. Focus on the historical and philosophical context relevant to Buddhism or Jainism. Question: "${q.question}" Correct Answer: "${q.options[q.correctAnswerIndex]}". Keep the explanation to a few sentences.`;
+                    callGeminiAPI(prompt, explanationButton, loadingIndicator, explanationDiv);
+                });
+                solutionItem.appendChild(explanationButton);
+                solutionItem.appendChild(explanationDiv);
+                solutionsContainerEl.appendChild(solutionItem);
+            });
+
+            scoreTextEl.textContent = `You scored ${score} out of ${currentQuizQuestions.length} questions!`;
+            submitQuizBtnEl.classList.add('hidden');
+            showCelebration();
+        }
+
+        // --- Event Listeners ---
+        submitQuizBtnEl.addEventListener('click', handleSubmitQuiz);
+        summarizeDifferencesBtnEl.addEventListener('click', () => {
+            const loadingIndicator = summarizeDifferencesBtnEl.querySelector('.loading-indicator');
+            const prompt = "Provide a concise summary highlighting 3-4 key philosophical and practical differences between Buddhism and Jainism. Format the output clearly, perhaps using bullet points for each religion or for each point of difference.";
+            callGeminiAPI(prompt, summarizeDifferencesBtnEl, loadingIndicator, differencesSummaryContainerEl);
+        });
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            showPage('page-home', document.querySelector('nav a[onclick*="page-home"]'));
+        });
+    </script>
+</body>
+</html>
