@@ -141,7 +141,6 @@
         #page-quiz-view .solution-item .question-text { font-size: 1rem; font-weight: 600; color: #BF5700; margin-bottom: 0.5rem; }
         #page-quiz-view .solution-item .correct-answer { font-weight: 600; color: #27AE60; }
         #page-quiz-view .solution-item .your-answer { font-weight: 600; color: #E74C3C; }
-        /* These styles are for the final solution display, not the live feedback */
         #page-quiz-view .correct-option { background-color: #dcfce7 !important; border-color: #10b981 !important; }
         #page-quiz-view .wrong-option { background-color: #fee2e2 !important; border-color: #ef4444 !important; }
         #page-quiz-view .selected-correct { background-color: #dcfce7 !important; border-color: #10b981 !important; }
@@ -162,7 +161,7 @@
             background-color: #fffcf7; padding: 2rem; border-radius: 1rem;
             text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.2);
             transform: scale(0.7); transition: transform 0.3s ease-out;
-            width: 90%; max-width: 400px; /* Adjusted max-width for simpler login */
+            width: 90%; max-width: 400px;
         }
         .modal-overlay.visible .modal-content { transform: scale(1); }
         .celebration-modal-content h3 { font-size: 2rem; font-weight: bold; color: #FF9933; margin-bottom: 0.5rem; }
@@ -332,6 +331,7 @@
                 if (user) {
                     userId = user.uid;
                     console.log("Firebase Auth: User is signed in with UID:", userId);
+                    // This condition helps if auth completes *after* name is entered
                     if (loginModalEl.classList.contains('visible') && loggedInUserName) {
                          hideLoginModal();
                          showPage('page-home', document.querySelector('nav a[onclick*="page-home"]'));
@@ -353,7 +353,6 @@
             });
         } catch (e) {
             console.error("Error initializing Firebase:", e);
-            // alert("Could not connect to the score service. Scores will not be saved or displayed online.");
         }
 
         console.log("Defining DOM elements...");
@@ -366,9 +365,9 @@
         const quizResultSectionEl = document.getElementById('quizResultSection');
         const scoreTextEl = quizResultSectionEl.querySelector('.score-text');
         const solutionsContainerEl = document.getElementById('solutionsContainer');
-        const summarizeBtnEl = document.getElementById('summarizeBtn'); // Updated ID
-        const summarizeBtnTextEl = document.getElementById('summarizeBtnText'); // New span for button text
-        const summaryContainerEl = document.getElementById('summaryContainer'); // Updated ID
+        const summarizeBtnEl = document.getElementById('summarizeBtn');
+        const summarizeBtnTextEl = document.getElementById('summarizeBtnText');
+        const summaryContainerEl = document.getElementById('summaryContainer');
         const celebrationModalEl = document.getElementById('celebrationModal');
         const loginModalEl = document.getElementById('loginModal');
         const loginFormEl = document.getElementById('loginForm');
@@ -383,7 +382,7 @@
         let currentQuizQuestions = [];
         let currentQuizId = '';
         let loggedInUserName = '';
-        let userAnswers = {}; // To store user's first choice for each question
+        let userAnswers = {};
 
         console.log("Defining showPage function...");
         function showPage(pageId, clickedLink) {
@@ -775,12 +774,9 @@
                 loggedInUserName = name;
                 if(welcomeUserNameEl) welcomeUserNameEl.innerHTML = `Welcome to Interactive Quiz, <span style="font-weight:600;">${loggedInUserName}</span>!`; // Updated welcome message
                 console.log('Login Successful for:', loggedInUserName);
-                if (auth && auth.currentUser) {
-                    hideLoginModal();
-                    showPage('page-home', document.querySelector('nav a[onclick*="page-home"]'));
-                } else {
-                    console.log("Login form submitted, waiting for Firebase auth to complete to hide modal.");
-                }
+                // Directly hide modal and show home page after successful name input
+                hideLoginModal();
+                showPage('page-home', document.querySelector('nav a[onclick*="page-home"]'));
             }
         });
         console.log("loginForm submit listener added.");
@@ -807,23 +803,24 @@
         document.addEventListener('DOMContentLoaded', () => {
             console.log("DOM Content Loaded. Initializing page state.");
             console.log("Initial loggedInUserName:", loggedInUserName);
-            if (!loggedInUserName) {
+            if (!loggedInUserName) { // Only show login modal if user hasn't "logged in" yet in this session
                  displayLoginModal();
             }
-            if (typeof window.showPage !== 'function') window.showPage = showPage;
-            if (typeof window.navigateToQuizList !== 'function') window.navigateToQuizList = navigateToQuizList;
-            if (typeof window.loadAndShowQuiz !== 'function') window.loadAndShowQuiz = loadAndShowQuiz;
-            console.log("Global functions ensured on window object post DOMContentLoaded (if not already).");
-            console.log("Type of window.loadAndShowQuiz after DOMContentLoaded assignment:", typeof window.loadAndShowQuiz);
+            // Ensure functions are globally available
+            window.showPage = showPage;
+            window.navigateToQuizList = navigateToQuizList;
+            window.loadAndShowQuiz = loadAndShowQuiz;
+            console.log("Global functions assigned on DOMContentLoaded.");
         });
         console.log("DOMContentLoaded listener added.");
 
-        console.log("Assigning functions to window object (top level)...");
-        console.log("Type of loadAndShowQuiz before assignment to window:", typeof loadAndShowQuiz);
-        window.showPage = showPage;
-        window.navigateToQuizList = navigateToQuizList;
-        window.loadAndShowQuiz = loadAndShowQuiz;
-        console.log("Functions assigned to window object. Type of window.loadAndShowQuiz:", typeof window.loadAndShowQuiz);
+        // Redundant assignment, already handled in DOMContentLoaded, but kept for safety if script structure changes.
+        // console.log("Assigning functions to window object (top level)...");
+        // window.showPage = showPage;
+        // window.navigateToQuizList = navigateToQuizList;
+        // window.loadAndShowQuiz = loadAndShowQuiz;
+        // console.log("Functions assigned to window object. Type of window.loadAndShowQuiz:", typeof window.loadAndShowQuiz);
+
         console.log("Script module execution finished.");
     </script>
 </body>
