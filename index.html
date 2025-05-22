@@ -9,10 +9,13 @@
     <style>
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #FFF7ED; /* Very light saffron/peach background */
-            color: #4A3B31; /* Dark brown text for contrast */
+            background-color: #FFF7ED;
+            color: #4A3B31;
             margin: 0;
             padding: 0;
+        }
+        body.modal-open {
+            overflow: hidden;
         }
         .page {
             display: none;
@@ -27,22 +30,32 @@
             to { opacity: 1; transform: translateY(0); }
         }
         header {
-            /* Reverted to previous purple gradient */
             background-image: linear-gradient(to right, #4f46e5, #6366f1, #818cf8);
             color: white;
-            padding: 1.5rem 2rem;
+            padding: 1rem 2rem; /* Adjusted padding */
             box-shadow: 0 4px 6px rgba(0,0,0,0.1);
             display: flex;
             justify-content: space-between;
             align-items: center;
-            /* Reverted to previous purple border */
             border-bottom: 3px solid #3730a3;
         }
+        header .title-container {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+        }
         header h1 {
-            font-size: 2rem;
+            font-size: 1.8rem; /* Main title size */
             font-weight: 700;
             margin: 0;
+            line-height: 1.2;
             text-shadow: 1px 1px 2px rgba(0,0,0,0.2);
+        }
+        header .subtitle {
+            font-size: 0.85rem; /* Subtitle size */
+            font-weight: 400;
+            margin-top: 0.1rem;
+            opacity: 0.9;
         }
         nav a {
             color: white;
@@ -54,7 +67,6 @@
             transition: background-color 0.2s ease, transform 0.2s ease;
         }
         nav a:hover, nav a.active-nav {
-            /* Reverted to previous purple hover/active */
             background-color: #3730a3;
             transform: translateY(-2px);
         }
@@ -67,9 +79,13 @@
             padding: 0;
             overflow: hidden;
         }
+        .main-content-area.blurred {
+            filter: blur(5px);
+            pointer-events: none;
+        }
         .card {
-            background-color: #fffcf7; /* Lighter cream for cards */
-            border: 1px solid #FDE8D8; /* Light saffron border */
+            background-color: #fffcf7;
+            border: 1px solid #FDE8D8;
             border-radius: 0.75rem;
             padding: 1.5rem;
             margin-bottom: 1.5rem;
@@ -78,16 +94,16 @@
         .card h2 {
             font-size: 1.5rem;
             font-weight: 600;
-            color: #D35400; /* Rich orange for card titles */
+            color: #D35400;
             margin-top: 0;
             margin-bottom: 1rem;
         }
         .card p {
-            color: #59493E; /* Brownish text for card content */
+            color: #59493E;
             line-height: 1.6;
         }
-        .button-primary {
-            background-color: #FF9933; /* Main Saffron/Orange */
+        .button-primary, .login-modal-content button[type="submit"] {
+            background-color: #FF9933;
             color: white;
             padding: 0.75rem 1.5rem;
             border-radius: 0.5rem;
@@ -99,164 +115,180 @@
             cursor: pointer;
             box-shadow: 0 2px 5px rgba(255, 153, 51, 0.4);
         }
-        .button-primary:hover {
-            background-color: #E67E22; /* Darker Saffron/Orange */
+        .button-primary:hover, .login-modal-content button[type="submit"]:hover {
+            background-color: #E67E22;
             transform: translateY(-1px);
         }
 
-        /* Styles for the quiz page itself */
         #page-quiz-view .question-block { margin-bottom: 1.5rem; padding: 1.25rem; background-color: #FFFBF5; border-radius: 0.75rem; border: 1px solid #FCE5CD; }
-        #page-quiz-view .question-text { font-size: 1.125rem; font-weight: 600; margin-bottom: 1rem; color: #BF5700; } /* Darker orange for question text */
+        #page-quiz-view .question-text { font-size: 1.125rem; font-weight: 600; margin-bottom: 1rem; color: #BF5700; }
         #page-quiz-view .option-label { display: flex; align-items: center; padding: 0.75rem 1rem; margin-bottom: 0.5rem; border-radius: 0.5rem; cursor: pointer; transition: background-color 0.2s ease-in-out, border-color 0.2s ease-in-out; border: 1px solid #FADCB9; color: #59493E; }
-        #page-quiz-view .option-label:hover { background-color: #FFE8CC; border-color: #FFB366; }
-        #page-quiz-view .option-label input[type="radio"] { margin-right: 0.75rem; accent-color: #FF9933; } /* Saffron accent */
+        #page-quiz-view .option-label:hover:not(.disabled-option) { background-color: #FFE8CC; border-color: #FFB366; } /* Only hover if not disabled */
+        #page-quiz-view .option-label.disabled-option { cursor: not-allowed; opacity: 0.7; }
+        #page-quiz-view .option-label input[type="radio"] { margin-right: 0.75rem; accent-color: #FF9933; }
+        #page-quiz-view .option-label.correct-live { background-color: #dcfce7 !important; border-color: #10b981 !important; color: #065f46 !important; }
+        #page-quiz-view .option-label.wrong-live { background-color: #fee2e2 !important; border-color: #ef4444 !important; color: #991b1b !important; }
+
         #page-quiz-view .submit-button, #page-quiz-view .gemini-button { background-color: #FF9933; color: white; padding: 0.75rem 1.5rem; border-radius: 0.75rem; font-weight: 600; cursor: pointer; transition: background-color 0.2s ease-in-out, transform 0.2s ease; width: 100%; margin-top: 1.5rem; border: none; box-shadow: 0 2px 5px rgba(255, 153, 51, 0.4); }
         #page-quiz-view .submit-button:hover, #page-quiz-view .gemini-button:hover { background-color: #E67E22; transform: translateY(-1px); }
-        #page-quiz-view .gemini-explain-button { background-color: #FFA750; /* Lighter orange for explain button */ color: white; padding: 0.5rem 1rem; border-radius: 0.5rem; font-weight: 500; cursor: pointer; transition: background-color 0.2s ease-in-out, transform 0.2s ease; margin-top: 0.75rem; border: none; font-size: 0.875rem; box-shadow: 0 2px 5px rgba(255, 167, 80, 0.3); }
+        #page-quiz-view .gemini-explain-button { background-color: #FFA750; color: white; padding: 0.5rem 1rem; border-radius: 0.5rem; font-weight: 500; cursor: pointer; transition: background-color 0.2s ease-in-out, transform 0.2s ease; margin-top: 0.75rem; border: none; font-size: 0.875rem; box-shadow: 0 2px 5px rgba(255, 167, 80, 0.3); }
         #page-quiz-view .gemini-explain-button:hover { background-color: #FF8C21; transform: translateY(-1px); }
         #page-quiz-view .gemini-explain-button:disabled, #page-quiz-view .gemini-button:disabled { background-color: #FADCB9; color: #A88771; cursor: not-allowed; box-shadow: none; transform: none;}
         #page-quiz-view .result-section { margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid #FDE8D8; }
-        #page-quiz-view .score-text { font-size: 1.5rem; font-weight: 700; color: #27AE60; text-align: center; margin-bottom: 1.5rem; } /* Kept green for score, good contrast */
+        #page-quiz-view .score-text { font-size: 1.5rem; font-weight: 700; color: #27AE60; text-align: center; margin-bottom: 1.5rem; }
         #page-quiz-view .solution-title { font-size: 1.25rem; font-weight: 600; color: #D35400; margin-bottom: 1rem; }
-        #page-quiz-view .solution-item { margin-bottom: 1rem; padding: 1rem; border-radius: 0.75rem; background-color: #FEF5ED; border: 1px solid #FCE5CD; } /* Light saffron for solution item */
+        #page-quiz-view .solution-item { margin-bottom: 1rem; padding: 1rem; border-radius: 0.75rem; background-color: #FEF5ED; border: 1px solid #FCE5CD; }
         #page-quiz-view .solution-item .question-text { font-size: 1rem; font-weight: 600; color: #BF5700; margin-bottom: 0.5rem; }
-        #page-quiz-view .solution-item .correct-answer { font-weight: 600; color: #27AE60; } /* Kept green */
-        #page-quiz-view .solution-item .your-answer { font-weight: 600; color: #E74C3C; } /* Kept red */
-        #page-quiz-view .correct-option { background-color: #E8F8F5 !important; border-color: #A3E4D7 !important; } /* Light green for correct, distinct */
-        #page-quiz-view .wrong-option { background-color: #FDEDEC !important; border-color: #F5B7B1 !important; } /* Light red for wrong, distinct */
-        #page-quiz-view .selected-correct { background-color: #E8F8F5 !important; border-color: #A3E4D7 !important; }
-        #page-quiz-view .selected-wrong { background-color: #FDEDEC !important; border-color: #F5B7B1 !important; }
-        #page-quiz-view .gemini-explanation, #page-quiz-view .gemini-summary { margin-top: 1rem; padding: 1rem; background-color: #FFF0E1; border-radius: 0.5rem; border: 1px solid #FFDAB8; font-size: 0.95rem; color: #8C4A08; white-space: pre-wrap; } /* Saffron based for Gemini content */
+        #page-quiz-view .solution-item .correct-answer { font-weight: 600; color: #27AE60; }
+        #page-quiz-view .solution-item .your-answer { font-weight: 600; color: #E74C3C; }
+        /* These styles are for the final solution display, not the live feedback */
+        #page-quiz-view .correct-option { background-color: #dcfce7 !important; border-color: #10b981 !important; }
+        #page-quiz-view .wrong-option { background-color: #fee2e2 !important; border-color: #ef4444 !important; }
+        #page-quiz-view .selected-correct { background-color: #dcfce7 !important; border-color: #10b981 !important; }
+        #page-quiz-view .selected-wrong { background-color: #fee2e2 !important; border-color: #ef4444 !important; }
+
+        #page-quiz-view .gemini-explanation, #page-quiz-view .gemini-summary { margin-top: 1rem; padding: 1rem; background-color: #FFF0E1; border-radius: 0.5rem; border: 1px solid #FFDAB8; font-size: 0.95rem; color: #8C4A08; white-space: pre-wrap; }
         #page-quiz-view .loading-indicator { display: inline-block; margin-left: 0.5rem; font-style: italic; color: #A88771; }
         #page-quiz-view .quiz-title { text-align: center; font-size: 1.875rem; font-weight: bold; margin-bottom: 2rem; color: #D35400;}
 
-        /* Celebration Modal */
-        .celebration-modal-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.5);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
-            opacity: 0;
-            visibility: hidden;
-            transition: opacity 0.3s ease, visibility 0.3s ease;
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: rgba(40, 30, 20, 0.6); display: flex;
+            justify-content: center; align-items: center; z-index: 1000;
+            opacity: 0; visibility: hidden; transition: opacity 0.3s ease, visibility 0.3s ease;
         }
-        .celebration-modal-overlay.visible {
-            opacity: 1;
-            visibility: visible;
+        .modal-overlay.visible { opacity: 1; visibility: visible; }
+        .modal-content {
+            background-color: #fffcf7; padding: 2rem; border-radius: 1rem;
+            text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            transform: scale(0.7); transition: transform 0.3s ease-out;
+            width: 90%; max-width: 400px; /* Adjusted max-width for simpler login */
         }
-        .celebration-modal-content {
-            background-color: white;
-            padding: 2rem 3rem;
-            border-radius: 1rem;
-            text-align: center;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
-            transform: scale(0.7);
-            transition: transform 0.3s ease-out;
-        }
-        .celebration-modal-overlay.visible .celebration-modal-content {
-            transform: scale(1);
-        }
-        .celebration-modal-content h3 {
-            font-size: 2rem;
-            font-weight: bold;
-            color: #FF9933; /* Saffron title for modal - keeping this as it's a pop-up */
-            margin-bottom: 0.5rem;
-        }
-        .celebration-modal-content p {
-            font-size: 1.125rem;
-            color: #59493E;
-        }
-        .confetti {
-            position: absolute;
-            width: 10px;
-            height: 10px;
-            opacity: 0.8;
-            border-radius: 50%;
-            animation: fall 3s linear infinite;
-        }
-        @keyframes fall {
-            to {
-                transform: translateY(100vh) rotate(360deg);
-                opacity: 0;
-            }
-        }
+        .modal-overlay.visible .modal-content { transform: scale(1); }
+        .celebration-modal-content h3 { font-size: 2rem; font-weight: bold; color: #FF9933; margin-bottom: 0.5rem; }
+        .celebration-modal-content p { font-size: 1.125rem; color: #59493E; }
+        .confetti { position: absolute; width: 10px; height: 10px; opacity: 0.8; border-radius: 50%; animation: fall 3s linear infinite; }
+        @keyframes fall { to { transform: translateY(100vh) rotate(360deg); opacity: 0; } }
 
+        .login-modal-content h3 { font-size: 1.75rem; font-weight: bold; color: #D35400; margin-bottom: 1.5rem; }
+        .login-modal-content .form-group { margin-bottom: 1rem; text-align: left; }
+        .login-modal-content label { display: block; margin-bottom: 0.5rem; font-weight: 500; color: #8C4A08; }
+        .login-modal-content input[type="text"] {
+            width: 100%; padding: 0.75rem; border: 1px solid #FADCB9;
+            border-radius: 0.5rem; background-color: #ffffff; color: #59493E;
+            box-sizing: border-box; transition: border-color 0.2s ease;
+        }
+        .login-modal-content input[type="text"]:focus {
+            border-color: #FF9933; outline: none; box-shadow: 0 0 0 2px rgba(255, 153, 51, 0.2);
+        }
+        .login-modal-content button[type="submit"] { width: 100%; margin-top: 1rem; }
+        .login-error-message { color: #E74C3C; font-size: 0.875rem; margin-top: 0.25rem; text-align: left; min-height: 1.2em; }
+
+        #page-user-scores h2 { color: #D35400; text-align: center; margin-bottom: 1.5rem; }
+        #scoresTableContainer table {
+            width: 100%; border-collapse: collapse; margin-top: 1rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        #scoresTableContainer th, #scoresTableContainer td {
+            border: 1px solid #FDE8D8; padding: 0.75rem 1rem;
+            text-align: left; color: #59493E;
+        }
+        #scoresTableContainer th {
+            background-color: #FFE8CC; color: #BF5700; font-weight: 600;
+        }
+        #scoresTableContainer tr:nth-child(even) { background-color: #FFFBF5; }
+        #scoresTableContainer tr:hover { background-color: #FFF0E1; }
+        #noScoresMessage, #loadingScoresMessage {
+            text-align: center; color: #8C4A08; margin-top: 2rem; font-style: italic;
+        }
     </style>
 </head>
 <body>
-
-    <header>
-        <h1>Rahul's Quiz Hub</h1>
-        <nav>
-            <a href="#" onclick="showPage('page-home', this)" class="active-nav">Home</a>
-            <a href="#" onclick="showPage('page-quiz-list', this)">Quizzes</a>
-        </nav>
-    </header>
-
-    <div class="container">
-        <section id="page-home" class="page active">
-            <div class="card">
-                <h2>Welcome to Rahul's Quiz Hub!</h2>
-                <p>Test your knowledge with our engaging quizzes. Explore various topics and challenge yourself. Our quizzes are designed to be fun and educational, with AI-powered explanations to help you learn more.</p>
-                <p>Ready to start? Click the button below to see the list of available quizzes.</p>
-                <button class="button-primary" onclick="navigateToQuizList()">Browse Quizzes</button>
+    <div class="main-content-area" id="mainContentArea">
+        <header>
+            <div class="title-container">
+                <h1>Interactive Quiz</h1>
+                <span class="subtitle">(by Rahul Sharma)</span>
             </div>
-            <div class="card">
-                <h2>Featured Quiz</h2>
-                <p>Dive into the rich history and philosophies of Buddhism and Jainism. This quiz covers key figures, concepts, and events related to these ancient Indian religions.</p>
-                <button class="button-primary" onclick="loadAndShowQuiz('buddhism_jainism', 'Rahul\'s Quiz: Buddhism & Jainism')">Start Buddhism & Jainism Quiz</button>
-            </div>
-        </section>
+            <nav>
+                <a href="#" onclick="showPage('page-home', this)" class="active-nav">Home</a>
+                <a href="#" onclick="showPage('page-quiz-list', this)">Quizzes</a>
+                <a href="#" onclick="showPage('page-user-scores', this)">User Scores</a>
+            </nav>
+        </header>
 
-        <section id="page-quiz-list" class="page">
-            <div class="card">
-                <h2>Available Quizzes</h2>
-                <p>Choose a quiz from the list below to get started.</p>
-                <ul>
-                    <li class="mb-4">
-                        <h3 class="text-xl font-semibold text-gray-700" style="color: #D35400;">Buddhism & Jainism</h3>
-                        <p class="text-gray-600 my-2" style="color: #59493E;">Test your knowledge on the founders, scriptures, councils, and core tenets of Buddhism and Jainism. Ideal for SSC CGL aspirants and history enthusiasts.</p>
-                        <button class="button-primary" onclick="loadAndShowQuiz('buddhism_jainism', 'Rahul\'s Quiz: Buddhism & Jainism')">Start Quiz</button>
-                    </li>
-                    <li class="mb-4">
-                        <h3 class="text-xl font-semibold text-gray-700" style="color: #D35400;">More Quizzes Coming Soon!</h3>
-                        <p class="text-gray-600 my-2" style="color: #59493E;">We are working on adding more exciting quizzes on various topics. Stay tuned!</p>
-                    </li>
-                </ul>
-            </div>
-        </section>
+        <div class="container">
+            <section id="page-home" class="page active">
+                 <div class="card">
+                    <h2 id="welcomeUserName">Welcome to Interactive Quiz!</h2>
+                    <p>Test your knowledge with our engaging quizzes. Explore various topics and challenge yourself. Our quizzes are designed to be fun and educational, with AI-powered explanations to help you learn more.</p>
+                    <p>Ready to start? Click the button below to see the list of available quizzes.</p>
+                    <button class="button-primary" onclick="navigateToQuizList()">Browse Quizzes</button>
+                </div>
+                <div class="card">
+                    <h2>Featured Quiz</h2>
+                    <p>Dive into the rich history and philosophies of Buddhism and Jainism. This quiz covers key figures, concepts, and events related to these ancient Indian religions.</p>
+                    <button class="button-primary" onclick="loadAndShowQuiz('buddhism_jainism', 'Rahul\'s Quiz: Buddhism & Jainism')">Start Buddhism & Jainism Quiz</button>
+                </div>
+            </section>
 
-        <section id="page-quiz-view" class="page">
-            <h2 id="quizViewTitle" class="quiz-title"></h2>
-            <form id="quizFormContainer">
-                </form>
-            <button id="submitQuizBtn" class="submit-button">Submit Quiz</button>
+            <section id="page-quiz-list" class="page">
+                <div class="card">
+                    <h2>Available Quizzes</h2>
+                    <p>Choose a quiz from the list below to get started.</p>
+                    <ul>
+                        <li class="mb-4">
+                            <h3 class="text-xl font-semibold" style="color: #D35400;">Buddhism & Jainism</h3>
+                            <p class="my-2" style="color: #59493E;">Test your knowledge on the founders, scriptures, councils, and core tenets of Buddhism and Jainism. Ideal for SSC CGL aspirants and history enthusiasts.</p>
+                            <button class="button-primary" onclick="loadAndShowQuiz('buddhism_jainism', 'Rahul\'s Quiz: Buddhism & Jainism')">Start Quiz</button>
+                        </li>
+                        <li class="mb-4">
+                            <h3 class="text-xl font-semibold" style="color: #D35400;">Indus Valley & Stone Age</h3>
+                            <p class="my-2" style="color: #59493E;">Explore the ancient civilizations of the Indus Valley and the prehistoric Stone Age periods. Questions cover sites, tools, art, and lifestyle.</p>
+                            <button class="button-primary" onclick="loadAndShowQuiz('indus_stone_age', 'Rahul\'s Quiz: Indus Valley & Stone Age')">Start Quiz</button>
+                        </li>
+                        <li class="mb-4">
+                            <h3 class="text-xl font-semibold" style="color: #D35400;">Vedic Age & Mahajanapadas</h3>
+                            <p class="my-2" style="color: #59493E;">Delve into the Vedic period's scriptures, society, and the rise of the Mahajanapadas in ancient India.</p>
+                            <button class="button-primary" onclick="loadAndShowQuiz('vedic_mahajanapadas', 'Rahul\'s Quiz: Vedic Age & Mahajanapadas')">Start Quiz</button>
+                        </li>
+                        <li class="mb-4">
+                            <h3 class="text-xl font-semibold" style="color: #D35400;">More Quizzes Coming Soon!</h3>
+                            <p class="my-2" style="color: #59493E;">We are working on adding more exciting quizzes on various topics. Stay tuned!</p>
+                        </li>
+                    </ul>
+                </div>
+            </section>
 
-            <div id="quizResultSection" class="result-section hidden">
-                <h2 class="score-text"></h2>
-                <h3 class="solution-title">Solutions:</h3>
-                <div id="solutionsContainer">
-                    </div>
-                <button id="summarizeDifferencesBtn" class="gemini-button mt-6">
-                    ✨ Summarize Key Differences (Buddhism vs. Jainism)
-                    <span class="loading-indicator hidden">Loading...</span>
-                </button>
-                <div id="differencesSummaryContainer" class="gemini-summary hidden mt-4"></div>
-            </div>
-        </section>
+            <section id="page-quiz-view" class="page">
+                <h2 id="quizViewTitle" class="quiz-title"></h2>
+                <form id="quizFormContainer"></form>
+                <button id="submitQuizBtn" class="submit-button">Submit Quiz</button>
+                <div id="quizResultSection" class="result-section hidden">
+                    <h2 class="score-text"></h2>
+                    <h3 class="solution-title">Solutions:</h3>
+                    <div id="solutionsContainer"></div>
+                    <button id="summarizeBtn" class="gemini-button mt-6"> <span id="summarizeBtnText">✨ Summarize Key Concepts</span>
+                        <span class="loading-indicator hidden">Loading...</span>
+                    </button>
+                    <div id="summaryContainer" class="gemini-summary hidden mt-4"></div> </div>
+            </section>
+
+            <section id="page-user-scores" class="page">
+                <h2 class="text-2xl font-bold">User Quiz Scores</h2>
+                <p id="loadingScoresMessage">Loading scores...</p>
+                <div id="scoresTableContainer">
+                </div>
+                <p id="noScoresMessage" class="hidden">No scores recorded yet.</p>
+            </section>
+        </div>
     </div>
 
-    <div id="celebrationModal" class="celebration-modal-overlay">
-        <div class="celebration-modal-content">
+    <div id="celebrationModal" class="modal-overlay celebration-modal-overlay">
+        <div class="modal-content celebration-modal-content">
             <h3>🎉 Well Done! 🎉</h3>
             <p>Your results are ready.</p>
-            <div class="confetti" style="left: 10%; top: -20px; background-color: #FFD700; animation-delay: 0s;"></div>
+            <div class="confetti" style="left: 10%; top: -20px; background-color: #FFD700;"></div>
             <div class="confetti" style="left: 30%; top: -20px; background-color: #FFA500; animation-delay: 0.2s;"></div>
             <div class="confetti" style="left: 50%; top: -20px; background-color: #FF8C00; animation-delay: 0.4s;"></div>
             <div class="confetti" style="left: 70%; top: -20px; background-color: #FF7F50; animation-delay: 0.6s;"></div>
@@ -264,8 +296,68 @@
         </div>
     </div>
 
-    <script>
-        // --- DOM Elements ---
+    <div id="loginModal" class="modal-overlay">
+        <div class="modal-content login-modal-content">
+            <h3>Welcome to Interactive Quiz!</h3>
+            <form id="loginForm">
+                <div class="form-group">
+                    <label for="loginName">Enter Your Name:</label>
+                    <input type="text" id="loginName" name="loginName" required>
+                    <div class="login-error-message" id="nameError"></div>
+                </div>
+                <button type="submit">Start Quizzing</button>
+            </form>
+        </div>
+    </div>
+
+    <script type="module">
+        console.log("Script module execution started.");
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc, getDocs, Timestamp, query, orderBy as firestoreOrderBy } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        console.log("Firebase modules imported.");
+
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : { apiKey: "YOUR_API_KEY", authDomain: "YOUR_AUTH_DOMAIN", projectId: "YOUR_PROJECT_ID" };
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-quiz-app';
+        let app;
+        let db;
+        let auth;
+        let userId = null;
+        try {
+            app = initializeApp(firebaseConfig);
+            db = getFirestore(app);
+            auth = getAuth(app);
+            console.log("Firebase initialized successfully (app, db, auth).");
+            onAuthStateChanged(auth, async (user) => {
+                if (user) {
+                    userId = user.uid;
+                    console.log("Firebase Auth: User is signed in with UID:", userId);
+                    if (loginModalEl.classList.contains('visible') && loggedInUserName) {
+                         hideLoginModal();
+                         showPage('page-home', document.querySelector('nav a[onclick*="page-home"]'));
+                    }
+                } else {
+                    console.log("Firebase Auth: User is signed out. Attempting to sign in...");
+                    try {
+                        if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                            await signInWithCustomToken(auth, __initial_auth_token);
+                            console.log("Firebase Auth: Signed in with custom token.");
+                        } else {
+                            await signInAnonymously(auth);
+                            console.log("Firebase Auth: Signed in anonymously.");
+                        }
+                    } catch (error) {
+                        console.error("Firebase Auth: Error during sign-in:", error);
+                    }
+                }
+            });
+        } catch (e) {
+            console.error("Error initializing Firebase:", e);
+            // alert("Could not connect to the score service. Scores will not be saved or displayed online.");
+        }
+
+        console.log("Defining DOM elements...");
+        const mainContentAreaEl = document.getElementById('mainContentArea');
         const navLinks = document.querySelectorAll('nav a');
         const pages = document.querySelectorAll('.page');
         const quizViewTitleEl = document.getElementById('quizViewTitle');
@@ -274,18 +366,31 @@
         const quizResultSectionEl = document.getElementById('quizResultSection');
         const scoreTextEl = quizResultSectionEl.querySelector('.score-text');
         const solutionsContainerEl = document.getElementById('solutionsContainer');
-        const summarizeDifferencesBtnEl = document.getElementById('summarizeDifferencesBtn');
-        const differencesSummaryContainerEl = document.getElementById('differencesSummaryContainer');
+        const summarizeBtnEl = document.getElementById('summarizeBtn'); // Updated ID
+        const summarizeBtnTextEl = document.getElementById('summarizeBtnText'); // New span for button text
+        const summaryContainerEl = document.getElementById('summaryContainer'); // Updated ID
         const celebrationModalEl = document.getElementById('celebrationModal');
+        const loginModalEl = document.getElementById('loginModal');
+        const loginFormEl = document.getElementById('loginForm');
+        const loginNameInput = document.getElementById('loginName');
+        const nameErrorEl = document.getElementById('nameError');
+        const scoresTableContainerEl = document.getElementById('scoresTableContainer');
+        const noScoresMessageEl = document.getElementById('noScoresMessage');
+        const loadingScoresMessageEl = document.getElementById('loadingScoresMessage');
+        const welcomeUserNameEl = document.getElementById('welcomeUserName');
+        console.log("DOM elements defined.");
 
         let currentQuizQuestions = [];
+        let currentQuizId = '';
+        let loggedInUserName = '';
+        let userAnswers = {}; // To store user's first choice for each question
 
-        // --- Page Navigation Logic ---
+        console.log("Defining showPage function...");
         function showPage(pageId, clickedLink) {
+            console.log("showPage called for:", pageId);
             pages.forEach(page => page.classList.remove('active'));
             const targetPage = document.getElementById(pageId);
             if (targetPage) targetPage.classList.add('active');
-
             navLinks.forEach(link => link.classList.remove('active-nav'));
             if (clickedLink) {
                 clickedLink.classList.add('active-nav');
@@ -293,86 +398,36 @@
                 const activeNavLink = document.querySelector(`nav a[onclick*="${pageId}"]`);
                 if (activeNavLink) activeNavLink.classList.add('active-nav');
             }
+            if (pageId === 'page-user-scores' && db) {
+                renderUserScoresPage();
+            }
         }
+        console.log("showPage function defined. Type:", typeof showPage);
 
+        console.log("Defining navigateToQuizList function...");
         function navigateToQuizList() {
             showPage('page-quiz-list', document.querySelector('nav a[onclick*="page-quiz-list"]'));
         }
+        console.log("navigateToQuizList function defined. Type:", typeof navigateToQuizList);
 
-        // --- Quiz Data Store ---
-        const quizBank = {
-            buddhism_jainism: {
-                title: "Rahul's Quiz: Buddhism & Jainism",
-                data: [
-                    { question: "Who was the founder of Buddhism?", options: ["Mahavira", "Gautama Buddha", "Ashoka", "Bimbisara"], correctAnswerIndex: 1 },
-                    { question: "Where did Gautama Buddha attain enlightenment?", options: ["Sarnath", "Bodh Gaya", "Lumbini", "Kushinagar"], correctAnswerIndex: 1 },
-                    { question: "What is the sacred text of Jainism?", options: ["Tripitakas", "Angas", "Vedas", "Upanishads"], correctAnswerIndex: 1 },
-                    { question: "Which of the following is NOT one of the Four Noble Truths of Buddhism?", options: ["Suffering exists", "The origin of suffering is attachment", "Suffering can be ended", "The path to eternal life"], correctAnswerIndex: 3 },
-                    { question: "Mahavira, the 24th Tirthankara of Jainism, was born in which place?", options: ["Pataliputra", "Vaishali", "Kapilavastu", "Rajagriha"], correctAnswerIndex: 1 },
-                    { question: "The concept of 'Ahimsa' (non-violence) is central to which religion?", options: ["Buddhism", "Jainism", "Hinduism", "Sikhism"], correctAnswerIndex: 1 },
-                    { question: "What is the Buddhist term for the ultimate goal of liberation from suffering?", options: ["Moksha", "Nirvana", "Samadhi", "Karma"], correctAnswerIndex: 1 },
-                    { question: "Digambara and Svetambara are the two main sects of which religion?", options: ["Buddhism", "Jainism", "Sikhism", "Hinduism"], correctAnswerIndex: 1 },
-                    { question: "The First Buddhist Council was held at which place?", options: ["Vaishali", "Pataliputra", "Rajagriha", "Kashmir"], correctAnswerIndex: 2 },
-                    { question: "Which of the following is associated with Jainism?", options: ["Eightfold Path", "Triratnas (Three Jewels)", "Four Noble Truths", "Panchsheel"], correctAnswerIndex: 1 },
-                    { question: "What is the meaning of 'Buddha'?", options: ["Enlightened One", "Great Teacher", "Prince", "Ascetic"], correctAnswerIndex: 0 },
-                    { question: "The Jataka tales are related to the previous births of whom?", options: ["Mahavira", "Gautama Buddha", "Ashoka", "Chandragupta Maurya"], correctAnswerIndex: 1 },
-                    { question: "Which language was used to write the early Buddhist texts?", options: ["Sanskrit", "Pali", "Prakrit", "Magadhi"], correctAnswerIndex: 1 },
-                    { question: "What is the concept of 'Karma' in Buddhism?", options: ["Destiny", "Action and its consequences", "Rebirth", "Suffering"], correctAnswerIndex: 1 },
-                    { question: "Who was the mother of Mahavira?", options: ["Maya", "Trishala", "Yashodhara", "Devaki"], correctAnswerIndex: 1 },
-                    { question: "The term 'Tirthankara' is associated with which religion?", options: ["Buddhism", "Jainism", "Hinduism", "Sikhism"], correctAnswerIndex: 1 },
-                    { question: "What is the 'Middle Path' in Buddhism?", options: ["A path between extremes of indulgence and asceticism", "A path to wealth", "A path to power", "A path to knowledge"], correctAnswerIndex: 0 },
-                    { question: "Which of the following is a Jain festival?", options: ["Diwali", "Mahavir Jayanti", "Holi", "Eid"], correctAnswerIndex: 1 },
-                    { question: "Where did Gautama Buddha deliver his first sermon?", options: ["Bodh Gaya", "Sarnath", "Lumbini", "Kushinagar"], correctAnswerIndex: 1 },
-                    { question: "What is the 'Anatta' concept in Buddhism?", options: ["Self", "No-self or non-self", "Soul", "Consciousness"], correctAnswerIndex: 1 },
-                    { question: "The Sanchi Stupa is a famous monument related to which religion?", options: ["Jainism", "Buddhism", "Hinduism", "Sikhism"], correctAnswerIndex: 1 },
-                    { question: "What is the meaning of 'Jina' in Jainism?", options: ["Conqueror", "Teacher", "God", "Liberated Soul"], correctAnswerIndex: 0 },
-                    { question: "Which of the following is NOT a part of the 'Triratnas' (Three Jewels) of Jainism?", options: ["Right Faith", "Right Knowledge", "Right Conduct", "Right Speech"], correctAnswerIndex: 3 },
-                    { question: "The concept of 'Syadvada' (theory of 'may be') is associated with which philosophy?", options: ["Buddhism", "Jainism", "Charvaka", "Nyaya"], correctAnswerIndex: 1 },
-                    { question: "Who was the last Tirthankara of Jainism?", options: ["Rishabhanatha", "Parshvanatha", "Mahavira", "Ajitnath"], correctAnswerIndex: 2 },
-                    { question: "The term 'Sangha' in Buddhism refers to what?", options: ["Monastery", "Community of monks and nuns", "Sacred text", "Place of worship"], correctAnswerIndex: 1 },
-                    { question: "Which Mauryan emperor converted to Buddhism?", options: ["Chandragupta Maurya", "Bindusara", "Ashoka", "Brihadratha"], correctAnswerIndex: 2 },
-                    { question: "What is the 'Vinaya Pitaka' in Buddhism?", options: ["Collection of Buddha's sermons", "Rules for monastic discipline", "Philosophical discourses", "Stories of Buddha's past lives"], correctAnswerIndex: 1 },
-                    { question: "The concept of 'Anicca' (impermanence) is a core doctrine of which religion?", options: ["Jainism", "Buddhism", "Hinduism", "Sikhism"], correctAnswerIndex: 1 },
-                    { question: "Where did Mahavira attain 'Kaivalya' (omniscience)?", options: ["Pava", "Vaishali", "Kundagrama", "Rajagriha"], correctAnswerIndex: 0 },
-                    { question: "What is the 'Stupa' in Buddhist architecture?", options: ["A temple", "A dwelling for monks", "A mound containing relics", "A prayer hall"], correctAnswerIndex: 2 },
-                    { question: "The 'Kalpa Sutra' is an important text of which religion?", options: ["Buddhism", "Jainism", "Hinduism", "Sikhism"], correctAnswerIndex: 1 },
-                    { question: "Which of the following is NOT one of the 'Panch Mahavratas' (Five Great Vows) of Jainism?", options: ["Ahimsa (non-violence)", "Satya (truthfulness)", "Asteya (non-stealing)", "Dharma (righteousness)"], correctAnswerIndex: 3 },
-                    { question: "The 'Chaitya' in Buddhist architecture refers to what?", options: ["A monastery", "A stupa", "A prayer hall", "A dwelling for monks"], correctAnswerIndex: 2 },
-                    { question: "What was the original name of Gautama Buddha?", options: ["Devadatta", "Siddhartha", "Ananda", "Rahula"], correctAnswerIndex: 1 },
-                    { question: "The concept of 'Anekantavada' (non-absolutism) is a key principle of which religion?", options: ["Buddhism", "Jainism", "Hinduism", "Sikhism"], correctAnswerIndex: 1 },
-                    { question: "Which Buddhist text contains the discourses of Buddha?", options: ["Vinaya Pitaka", "Sutta Pitaka", "Abhidhamma Pitaka", "Jataka Tales"], correctAnswerIndex: 1 },
-                    { question: "The 'Shwetambara' sect of Jainism wears what color clothes?", options: ["Red", "White", "Black", "Yellow"], correctAnswerIndex: 1 },
-                    { question: "What is the Buddhist term for suffering?", options: ["Nirvana", "Dukkha", "Karma", "Anatta"], correctAnswerIndex: 1 },
-                    { question: "The 'Digambara' sect of Jainism practices what?", options: ["Wearing white clothes", "Complete nudity", "Wearing saffron robes", "Wearing black clothes"], correctAnswerIndex: 1 },
-                    { question: "Which of the following is considered the birthplace of Gautama Buddha?", options: ["Sarnath", "Bodh Gaya", "Lumbini", "Kushinagar"], correctAnswerIndex: 2 },
-                    { question: "The 'Theravada' school of Buddhism is primarily practiced in which region?", options: ["Tibet", "China", "Southeast Asia (e.g., Sri Lanka, Thailand)", "Japan"], correctAnswerIndex: 2 },
-                    { question: "What is the 'Parinirvana' of Buddha?", options: ["His birth", "His enlightenment", "His first sermon", "His death"], correctAnswerIndex: 3 },
-                    { question: "The 'Mahayana' school of Buddhism emphasizes what concept?", options: ["Individual liberation", "Bodhisattvas and compassion", "Strict monastic rules", "Austerity"], correctAnswerIndex: 1 },
-                    { question: "Who was the first Tirthankara of Jainism?", options: ["Mahavira", "Parshvanatha", "Rishabhanatha", "Ajitnath"], correctAnswerIndex: 2 },
-                    { question: "The 'Viharas' in Buddhism are what?", options: ["Stupas", "Prayer halls", "Monasteries or dwelling places for monks", "Temples"], correctAnswerIndex: 2 },
-                    { question: "What is the primary purpose of the 'Eightfold Path' in Buddhism?", options: ["To achieve wealth", "To end suffering and achieve Nirvana", "To gain political power", "To live a long life"], correctAnswerIndex: 1 },
-                    { question: "The concept of 'Sallekhana' (fast unto death) is practiced in which religion?", options: ["Buddhism", "Jainism", "Hinduism", "Sikhism"], correctAnswerIndex: 1 },
-                    { question: "Which of the following is a common symbol in Buddhism?", options: ["Swastika", "Om", "Dharma Chakra (Wheel of Law)", "Trishul"], correctAnswerIndex: 2 },
-                    { question: "The 'Ajivika' sect was a contemporary of which two major religions?", options: ["Hinduism and Sikhism", "Buddhism and Jainism", "Christianity and Islam", "Zoroastrianism and Judaism"], correctAnswerIndex: 1 }
-                ]
-            }
+        console.log("Defining quizBank...");
+        const quizBank = { // Full data assumed from context
+            buddhism_jainism: { title: "Rahul's Quiz: Buddhism & Jainism", summaryPrompt: "Provide a concise summary highlighting 3-4 key philosophical and practical differences between Buddhism and Jainism...", data: [ { question: "Who was the founder of Buddhism?", options: ["Mahavira", "Gautama Buddha", "Ashoka", "Bimbisara"], correctAnswerIndex: 1 }, { question: "Where did Gautama Buddha attain enlightenment?", options: ["Sarnath", "Bodh Gaya", "Lumbini", "Kushinagar"], correctAnswerIndex: 1 }, { question: "What is the sacred text of Jainism?", options: ["Tripitakas", "Angas", "Vedas", "Upanishads"], correctAnswerIndex: 1 }, { question: "Which of the following is NOT one of the Four Noble Truths of Buddhism?", options: ["Suffering exists", "The origin of suffering is attachment", "Suffering can be ended", "The path to eternal life"], correctAnswerIndex: 3 }, { question: "Mahavira, the 24th Tirthankara of Jainism, was born in which place?", options: ["Pataliputra", "Vaishali", "Kapilavastu", "Rajagriha"], correctAnswerIndex: 1 }, { question: "The concept of 'Ahimsa' (non-violence) is central to which religion?", options: ["Buddhism", "Jainism", "Hinduism", "Sikhism"], correctAnswerIndex: 1 }, { question: "What is the Buddhist term for the ultimate goal of liberation from suffering?", options: ["Moksha", "Nirvana", "Samadhi", "Karma"], correctAnswerIndex: 1 }, { question: "Digambara and Svetambara are the two main sects of which religion?", options: ["Buddhism", "Jainism", "Sikhism", "Hinduism"], correctAnswerIndex: 1 }, { question: "The First Buddhist Council was held at which place?", options: ["Vaishali", "Pataliputra", "Rajagriha", "Kashmir"], correctAnswerIndex: 2 }, { question: "Which of the following is associated with Jainism?", options: ["Eightfold Path", "Triratnas (Three Jewels)", "Four Noble Truths", "Panchsheel"], correctAnswerIndex: 1 }, { question: "What is the meaning of 'Buddha'?", options: ["Enlightened One", "Great Teacher", "Prince", "Ascetic"], correctAnswerIndex: 0 }, { question: "The Jataka tales are related to the previous births of whom?", options: ["Mahavira", "Gautama Buddha", "Ashoka", "Chandragupta Maurya"], correctAnswerIndex: 1 }, { question: "Which language was used to write the early Buddhist texts?", options: ["Sanskrit", "Pali", "Prakrit", "Magadhi"], correctAnswerIndex: 1 }, { question: "What is the concept of 'Karma' in Buddhism?", options: ["Destiny", "Action and its consequences", "Rebirth", "Suffering"], correctAnswerIndex: 1 }, { question: "Who was the mother of Mahavira?", options: ["Maya", "Trishala", "Yashodhara", "Devaki"], correctAnswerIndex: 1 }, { question: "The term 'Tirthankara' is associated with which religion?", options: ["Buddhism", "Jainism", "Hinduism", "Sikhism"], correctAnswerIndex: 1 }, { question: "What is the 'Middle Path' in Buddhism?", options: ["A path between extremes of indulgence and asceticism", "A path to wealth", "A path to power", "A path to knowledge"], correctAnswerIndex: 0 }, { question: "Which of the following is a Jain festival?", options: ["Diwali", "Mahavir Jayanti", "Holi", "Eid"], correctAnswerIndex: 1 }, { question: "Where did Gautama Buddha deliver his first sermon?", options: ["Bodh Gaya", "Sarnath", "Lumbini", "Kushinagar"], correctAnswerIndex: 1 }, { question: "What is the 'Anatta' concept in Buddhism?", options: ["Self", "No-self or non-self", "Soul", "Consciousness"], correctAnswerIndex: 1 }, { question: "The Sanchi Stupa is a famous monument related to which religion?", options: ["Jainism", "Buddhism", "Hinduism", "Sikhism"], correctAnswerIndex: 1 }, { question: "What is the meaning of 'Jina' in Jainism?", options: ["Conqueror", "Teacher", "God", "Liberated Soul"], correctAnswerIndex: 0 }, { question: "Which of the following is NOT a part of the 'Triratnas' (Three Jewels) of Jainism?", options: ["Right Faith", "Right Knowledge", "Right Conduct", "Right Speech"], correctAnswerIndex: 3 }, { question: "The concept of 'Syadvada' (theory of 'may be') is associated with which philosophy?", options: ["Buddhism", "Jainism", "Charvaka", "Nyaya"], correctAnswerIndex: 1 }, { question: "Who was the last Tirthankara of Jainism?", options: ["Rishabhanatha", "Parshvanatha", "Mahavira", "Ajitnath"], correctAnswerIndex: 2 }, { question: "The term 'Sangha' in Buddhism refers to what?", options: ["Monastery", "Community of monks and nuns", "Sacred text", "Place of worship"], correctAnswerIndex: 1 }, { question: "Which Mauryan emperor converted to Buddhism?", options: ["Chandragupta Maurya", "Bindusara", "Ashoka", "Brihadratha"], correctAnswerIndex: 2 }, { question: "What is the 'Vinaya Pitaka' in Buddhism?", options: ["Collection of Buddha's sermons", "Rules for monastic discipline", "Philosophical discourses", "Stories of Buddha's past lives"], correctAnswerIndex: 1 }, { question: "The concept of 'Anicca' (impermanence) is a core doctrine of which religion?", options: ["Jainism", "Buddhism", "Hinduism", "Sikhism"], correctAnswerIndex: 1 }, { question: "Where did Mahavira attain 'Kaivalya' (omniscience)?", options: ["Pava", "Vaishali", "Kundagrama", "Rajagriha"], correctAnswerIndex: 0 }, { question: "What is the 'Stupa' in Buddhist architecture?", options: ["A temple", "A dwelling for monks", "A mound containing relics", "A prayer hall"], correctAnswerIndex: 2 }, { question: "The 'Kalpa Sutra' is an important text of which religion?", options: ["Buddhism", "Jainism", "Hinduism", "Sikhism"], correctAnswerIndex: 1 }, { question: "Which of the following is NOT one of the 'Panch Mahavratas' (Five Great Vows) of Jainism?", options: ["Ahimsa (non-violence)", "Satya (truthfulness)", "Asteya (non-stealing)", "Dharma (righteousness)"], correctAnswerIndex: 3 }, { question: "The 'Chaitya' in Buddhist architecture refers to what?", options: ["A monastery", "A stupa", "A prayer hall", "A dwelling for monks"], correctAnswerIndex: 2 }, { question: "What was the original name of Gautama Buddha?", options: ["Devadatta", "Siddhartha", "Ananda", "Rahula"], correctAnswerIndex: 1 }, { question: "The concept of 'Anekantavada' (non-absolutism) is a key principle of which religion?", options: ["Buddhism", "Jainism", "Hinduism", "Sikhism"], correctAnswerIndex: 1 }, { question: "Which Buddhist text contains the discourses of Buddha?", options: ["Vinaya Pitaka", "Sutta Pitaka", "Abhidhamma Pitaka", "Jataka Tales"], correctAnswerIndex: 1 }, { question: "The 'Shwetambara' sect of Jainism wears what color clothes?", options: ["Red", "White", "Black", "Yellow"], correctAnswerIndex: 1 }, { question: "What is the Buddhist term for suffering?", options: ["Nirvana", "Dukkha", "Karma", "Anatta"], correctAnswerIndex: 1 }, { question: "The 'Digambara' sect of Jainism practices what?", options: ["Wearing white clothes", "Complete nudity", "Wearing saffron robes", "Wearing black clothes"], correctAnswerIndex: 1 }, { question: "Which of the following is considered the birthplace of Gautama Buddha?", options: ["Sarnath", "Bodh Gaya", "Lumbini", "Kushinagar"], correctAnswerIndex: 2 }, { question: "The 'Theravada' school of Buddhism is primarily practiced in which region?", options: ["Tibet", "China", "Southeast Asia (e.g., Sri Lanka, Thailand)", "Japan"], correctAnswerIndex: 2 }, { question: "What is the 'Parinirvana' of Buddha?", options: ["His birth", "His enlightenment", "His first sermon", "His death"], correctAnswerIndex: 3 }, { question: "The 'Mahayana' school of Buddhism emphasizes what concept?", options: ["Individual liberation", "Bodhisattvas and compassion", "Strict monastic rules", "Austerity"], correctAnswerIndex: 1 }, { question: "Who was the first Tirthankara of Jainism?", options: ["Mahavira", "Parshvanatha", "Rishabhanatha", "Ajitnath"], correctAnswerIndex: 2 }, { question: "The 'Viharas' in Buddhism are what?", options: ["Stupas", "Prayer halls", "Monasteries or dwelling places for monks", "Temples"], correctAnswerIndex: 2 }, { question: "What is the primary purpose of the 'Eightfold Path' in Buddhism?", options: ["To achieve wealth", "To end suffering and achieve Nirvana", "To gain political power", "To live a long life"], correctAnswerIndex: 1 }, { question: "The concept of 'Sallekhana' (fast unto death) is practiced in which religion?", options: ["Buddhism", "Jainism", "Hinduism", "Sikhism"], correctAnswerIndex: 1 }, { question: "Which of the following is a common symbol in Buddhism?", options: ["Swastika", "Om", "Dharma Chakra (Wheel of Law)", "Trishul"], correctAnswerIndex: 2 }, { question: "The 'Ajivika' sect was a contemporary of which two major religions?", options: ["Hinduism and Sikhism", "Buddhism and Jainism", "Christianity and Islam", "Zoroastrianism and Judaism"], correctAnswerIndex: 1 }] },
+            indus_stone_age: { title: "Rahul's Quiz: Indus Valley & Stone Age", summaryPrompt: "Provide a concise summary highlighting 3-4 key characteristics and differences between the Stone Age periods (Paleolithic, Mesolithic, Neolithic) and the Indus Valley Civilization...", data: [ { question: "Which metal was first used by humans during the Chalcolithic Age, bridging the Stone Age and Bronze Age?", options: ["Iron", "Copper", "Bronze", "Gold"], correctAnswerIndex: 1 }, { question: "The earliest evidence of agriculture in the Indian subcontinent comes from which site?", options: ["Mehrgarh", "Harappa", "Mohenjo-daro", "Lothal"], correctAnswerIndex: 0 }, { question: "What is the main characteristic of Paleolithic Age tools?", options: ["Polished stone tools", "Microliths", "Crude and heavy hand axes, cleavers", "Copper tools"], correctAnswerIndex: 2 }, { question: "The Indus Valley Civilization primarily flourished along the banks of which river system?", options: ["Ganges-Yamuna", "Indus and Ghaggar-Hakra", "Narmada-Tapti", "Godavari-Krishna"], correctAnswerIndex: 1 }, { question: "Which Indus Valley site is famous for its dockyard?", options: ["Harappa", "Mohenjo-daro", "Lothal", "Kalibangan"], correctAnswerIndex: 2 }, { question: "The 'Dancing Girl' bronze statuette was discovered at which IVC site?", options: ["Harappa", "Mohenjo-daro", "Chanhudaro", "Banawali"], correctAnswerIndex: 1 }, { question: "What material were most Indus Valley seals made of?", options: ["Terracotta", "Steatite", "Bronze", "Ivory"], correctAnswerIndex: 1 }, { question: "Which of these animals is NOT frequently depicted on Indus Valley seals?", options: ["Unicorn Bull", "Elephant", "Horse", "Rhinoceros"], correctAnswerIndex: 2 }, { question: "The Great Granary is a significant structure found at which two IVC sites?", options: ["Harappa and Lothal", "Mohenjo-daro and Harappa", "Kalibangan and Dholavira", "Lothal and Chanhudaro"], correctAnswerIndex: 1 }, { question: "What was the primary occupation of the people of the Indus Valley Civilization?", options: ["Hunting and Gathering", "Pastoralism", "Agriculture and Trade", "Warfare"], correctAnswerIndex: 2 }, { question: "The script of the Indus Valley Civilization is:", options: ["Deciphered and related to Brahmi", "Undeciphered", "Related to Sanskrit", "Related to Sumerian cuneiform"], correctAnswerIndex: 1 }, { question: "Which Stone Age period is characterized by the use of microliths (tiny stone tools)?", options: ["Paleolithic", "Mesolithic", "Neolithic", "Chalcolithic"], correctAnswerIndex: 1 }, { question: "The discovery of fire is associated with which Stone Age period?", options: ["Paleolithic", "Mesolithic", "Neolithic", "Chalcolithic"], correctAnswerIndex: 0 }, { question: "Cave paintings, such as those at Bhimbetka, primarily belong to which period(s)?", options: ["Neolithic and Chalcolithic", "Paleolithic and Mesolithic", "Only Indus Valley Civilization", "Only Neolithic"], correctAnswerIndex: 1 }, { question: "The beginning of settled life and village communities is a hallmark of which age?", options: ["Paleolithic Age", "Mesolithic Age", "Neolithic Age", "Early Bronze Age"], correctAnswerIndex: 2 }, { question: "Which Indus Valley site shows evidence of ploughed fields?", options: ["Harappa", "Mohenjo-daro", "Kalibangan", "Dholavira"], correctAnswerIndex: 2 }, { question: "The term 'Saptasindhava' region is often associated with the early settlements of which culture?", options: ["Indus Valley Civilization", "Early Vedic Aryans", "Mauryan Empire", "Gupta Empire"], correctAnswerIndex: 0 }, { question: "What does the term 'Neolithic Revolution' refer to?", options: ["Invention of iron tools", "Beginning of hunting", "Transition to agriculture and settled life", "Development of urban centers"], correctAnswerIndex: 2 }, { question: "Pashupati Seal, depicting a seated figure surrounded by animals, was found at:", options: ["Lothal", "Harappa", "Mohenjo-daro", "Kalibangan"], correctAnswerIndex: 2 }, { question: "Which of the following is a characteristic feature of Harappan town planning?", options: ["Haphazard street layout", "Grid pattern of streets", "Circular houses", "Absence of drainage systems"], correctAnswerIndex: 1 }, { question: "The worship of Mother Goddess was prevalent in which ancient culture?", options: ["Vedic Period", "Indus Valley Civilization", "Maurya Period", "Gupta Period"], correctAnswerIndex: 1 }, { question: "Burzahom, a Neolithic site known for pit-dwellings, is located in which present-day Indian state/UT?", options: ["Rajasthan", "Jammu and Kashmir", "Gujarat", "Madhya Pradesh"], correctAnswerIndex: 1 }, { question: "Which of these was a major export item for the Harappans?", options: ["Iron tools", "Horses", "Cotton goods and beads", "Spices from South India"], correctAnswerIndex: 2 }, { question: "The Harappan civilization belongs to which historical period?", options: ["Paleolithic Age", "Neolithic Age", "Bronze Age", "Iron Age"], correctAnswerIndex: 2 }, { question: "What kind of burial practices were common in the Indus Valley Civilization?", options: ["Cremation only", "Water burial", "Extended inhumation (burial in pits)", "Sky burial"], correctAnswerIndex: 2 }, { question: "The earliest rock paintings in India have been found at:", options: ["Ajanta and Ellora", "Sittanavasal", "Bhimbetka", "Bagh caves"], correctAnswerIndex: 2 }, { question: "Which site provides the earliest evidence of rice cultivation in the Indian subcontinent?", options: ["Koldihwa", "Mehrgarh", "Harappa", "Inamgaon"], correctAnswerIndex: 0 }, { question: "The Indus people had trade relations with which contemporary civilization?", options: ["Roman Empire", "Mesopotamia", "Ancient Egypt (Old Kingdom)", "Ancient Greece (Minoan)"], correctAnswerIndex: 1 }, { question: "What is a 'citadel' in the context of Harappan cities?", options: ["A marketplace", "A residential area for commoners", "A raised, fortified area often containing important public buildings", "A burial ground"], correctAnswerIndex: 2 }, { question: "The Stone Age is divided into Paleolithic, Mesolithic, and Neolithic based on:", options: ["Types of metals used", "Types of pottery", "Types of stone tools and technology", "Religious beliefs"], correctAnswerIndex: 2 }, { question: "Which Indus Valley site is located in present-day Gujarat and known for its unique water management system?", options: ["Harappa", "Mohenjo-daro", "Dholavira", "Ropar"], correctAnswerIndex: 2 }, { question: "The use of potter's wheel became widespread during which period?", options: ["Paleolithic", "Mesolithic", "Neolithic", "Chalcolithic"], correctAnswerIndex: 2 }, { question: "What was the approximate period of the mature Harappan civilization?", options: ["5000-3500 BCE", "3500-2600 BCE", "2600-1900 BCE", "1900-1300 BCE"], correctAnswerIndex: 2 }, { question: "The 'bearded man' or 'priest-king' steatite sculpture is a famous artifact from:", options: ["Harappa", "Lothal", "Mohenjo-daro", "Chanhudaro"], correctAnswerIndex: 2 }, { question: "Which of the following crops was NOT extensively cultivated by the Harappans?", options: ["Wheat", "Barley", "Rice", "Sugarcane"], correctAnswerIndex: 3 }, { question: "The transition from food gathering to food production occurred during the:", options: ["Upper Paleolithic period", "Mesolithic period", "Neolithic period", "Chalcolithic period"], correctAnswerIndex: 2 }, { question: "What is the literal meaning of 'Mohenjo-daro'?", options: ["City of Joy", "Mound of the Dead", "Land of Seven Rivers", "Gateway to Heaven"], correctAnswerIndex: 1 }, { question: "Terracotta figurines of animals and humans were common in which culture?", options: ["Paleolithic sites", "Mesolithic sites", "Indus Valley Civilization", "Early Vedic sites"], correctAnswerIndex: 2 }, { question: "Which of these is a well-known Paleolithic site in India?", options: ["Lothal", "Attirampakkam", "Inamgaon", "Brahmagiri"], correctAnswerIndex: 1 }, { question: "The Harappan people primarily worshipped:", options: ["Trimurti (Brahma, Vishnu, Shiva)", "Nature gods, Proto-Shiva, Mother Goddess", "Indra and Agni", "Ancestral spirits"], correctAnswerIndex: 1 }, { question: "What type of script was used by the Harappans?", options: ["Alphabetic", "Syllabic", "Pictographic", "Cuneiform"], correctAnswerIndex: 2 }, { question: "The domestication of animals began primarily in which period?", options: ["Lower Paleolithic", "Upper Paleolithic", "Mesolithic", "Neolithic"], correctAnswerIndex: 2 }, { question: "Which site is known for a series of 'fire altars' suggesting ritualistic practices in IVC?", options: ["Mohenjo-daro and Harappa", "Lothal and Kalibangan", "Dholavira and Surkotada", "Rakhigarhi and Banawali"], correctAnswerIndex: 1 }, { question: "The end of the Indus Valley Civilization is attributed to various factors. Which is LEAST likely a primary cause?", options: ["Aryan invasion", "Climate change and droughts", "Floods and tectonic shifts", "Decline in trade"], correctAnswerIndex: 0 }, { question: "What were the houses in Harappan cities generally made of?", options: ["Wood and thatch", "Mud bricks", "Baked bricks", "Stone blocks"], correctAnswerIndex: 2 }, { question: "The earliest evidence of human settlement in India belongs to which period?", options: ["Neolithic", "Mesolithic", "Paleolithic", "Chalcolithic"], correctAnswerIndex: 2 }, { question: "Which of the following is a characteristic of Neolithic culture?", options: ["Nomadic lifestyle", "Polished stone tools and agriculture", "Hunting large animals with crude tools", "Use of iron implements"], correctAnswerIndex: 1 }, { question: "The Indus Valley site of Chanhudaro was known for:", options: ["Large granaries", "A dockyard", "Bead-making and crafts", "A large stupa"], correctAnswerIndex: 2 }, { question: "Sohgaura copper plate, an early Indian inscription, is related to:", options: ["Harappan trade", "Famine relief measures", "Vedic rituals", "Buddhist teachings"], correctAnswerIndex: 1 }, { question: "The people of the Indus Valley Civilization were NOT familiar with the use of:", options: ["Wheel", "Plough", "Bow and arrow", "Sword made of iron"], correctAnswerIndex: 3 }] },
+            vedic_mahajanapadas: { title: "Rahul's Quiz: Vedic Age & Mahajanapadas", summaryPrompt: "Provide a concise summary highlighting 3-4 key aspects of the Vedic Age (social structure, religion, texts) and the Mahajanapadas (political changes, prominent states, rise of new ideas).", data: [ { question: "Which is the oldest Veda?", options: ["Samaveda", "Yajurveda", "Rigveda", "Atharvaveda"], correctAnswerIndex: 2 }, { question: "The hymns of which Veda were sung by Udgatri priests?", options: ["Rigveda", "Samaveda", "Yajurveda", "Atharvaveda"], correctAnswerIndex: 1 }, { question: "The term 'Purusha Sukta', which describes the origin of the four varnas, is found in which Veda?", options: ["Rigveda", "Samaveda", "Yajurveda", "Atharvaveda"], correctAnswerIndex: 0 }, { question: "What was the primary occupation of the Early Vedic (Rigvedic) Aryans?", options: ["Agriculture", "Trade and Commerce", "Pastoralism", "Craftsmanship"], correctAnswerIndex: 2 }, { question: "Which river is most frequently mentioned in the Rigveda?", options: ["Ganga", "Yamuna", "Saraswati", "Indus (Sindhu)"], correctAnswerIndex: 3 }, { question: "The Upanishads are texts primarily concerned with:", options: ["Rituals and sacrifices", "Philosophical doctrines and mysticism", "Laws and social customs", "Hymns to gods"], correctAnswerIndex: 1 }, { question: "What does the term 'Sabha' and 'Samiti' refer to in the Vedic period?", options: ["Types of coins", "Royal officials", "Popular assemblies", "Agricultural tools"], correctAnswerIndex: 2 }, { question: "Who was the most important deity in the Early Vedic period?", options: ["Agni", "Varuna", "Indra", "Soma"], correctAnswerIndex: 2 }, { question: "The battle of Ten Kings (Dasarajna Yuddha) mentioned in the Rigveda was fought on the banks of which river?", options: ["Saraswati", "Parushni (Ravi)", "Vipasa (Beas)", "Shutudri (Sutlej)"], correctAnswerIndex: 1 }, { question: "What was the staple food of the Vedic Aryans?", options: ["Rice and fish", "Barley and Milk products", "Wheat and pulses", "Fruits and meat"], correctAnswerIndex: 1 }, { question: "The term 'Gotra' in the Vedic context originally meant:", options: ["A family unit", "A place of sacrifice", "A cow-pen or herd", "A teacher's lineage"], correctAnswerIndex: 2 }, { question: "Which of the following was NOT one of the four Ashramas (stages of life) in Later Vedic society?", options: ["Brahmacharya", "Grihastha", "Sanyasa", "Shudra"], correctAnswerIndex: 3 }, { question: "The Later Vedic period saw the rise of territorial kingdoms known as:", options: ["Ganas", "Janapadas", "Sanghas", "Vishayas"], correctAnswerIndex: 1 }, { question: "How many Mahajanapadas are traditionally mentioned in ancient texts?", options: ["10", "12", "16", "18"], correctAnswerIndex: 2 }, { question: "Which was the most powerful Mahajanapada in the 6th century BCE?", options: ["Kashi", "Kosala", "Avanti", "Magadha"], correctAnswerIndex: 3 }, { question: "What was the capital of Magadha Mahajanapada initially?", options: ["Pataliputra", "Vaishali", "Rajagriha (Girivraja)", "Champa"], correctAnswerIndex: 2 }, { question: "Ujjain was the capital of which Mahajanapada?", options: ["Avanti", "Vatsa", "Gandhara", "Kamboja"], correctAnswerIndex: 0 }, { question: "Which Mahajanapada was a republic and ruled by the Lichchhavis?", options: ["Magadha", "Kosala", "Vajji", "Malla"], correctAnswerIndex: 2 }, { question: "Bimbisara, the ruler of Magadha, belonged to which dynasty?", options: ["Nanda", "Maurya", "Haryanka", "Shishunaga"], correctAnswerIndex: 2 }, { question: "Ajatashatru, son of Bimbisara, shifted the capital of Magadha to:", options: ["Rajagriha", "Vaishali", "Pataliputra", "Champa"], correctAnswerIndex: 2 }, { question: "The Nanda dynasty, which succeeded the Shishunaga dynasty in Magadha, was founded by:", options: ["Dhana Nanda", "Mahapadma Nanda", "Ugrasena", "Chandragupta Maurya"], correctAnswerIndex: 1 }, { question: "Which ancient Indian physician and surgeon wrote the 'Sushruta Samhita'?", options: ["Charaka", "Sushruta", "Patanjali", "Panini"], correctAnswerIndex: 1 }, { question: "The concept of 'Nishkama Karma' (selfless action) is central to which text?", options: ["Rigveda", "Manusmriti", "Bhagavad Gita", "Arthashastra"], correctAnswerIndex: 2 }, { question: "What were the main causes for the rise of new religious movements like Buddhism and Jainism in the 6th century BCE?", options: ["Popularity of Vedic rituals", "Rigid varna system and complex rituals", "Foreign invasions", "Economic prosperity alone"], correctAnswerIndex: 1 }, { question: "The term 'Shreni' in ancient India referred to:", options: ["A type of tax", "A military unit", "A guild of merchants or artisans", "A village council"], correctAnswerIndex: 2 }, { question: "What type of pottery is characteristic of the Later Vedic period?", options: ["Ochre Coloured Pottery (OCP)", "Black and Red Ware (BRW)", "Painted Grey Ware (PGW)", "Northern Black Polished Ware (NBPW)"], correctAnswerIndex: 2 }, { question: "The 'Gayatri Mantra' is addressed to which Vedic deity?", options: ["Indra", "Agni", "Savitri (Sun God)", "Varuna"], correctAnswerIndex: 2 }, { question: "Which epic is known as 'Adi Kavya' (first poem)?", options: ["Mahabharata", "Ramayana", "Raghuvamsa", "Kumarasambhava"], correctAnswerIndex: 1 }, { question: "The philosophical concept of 'Atman' (self/soul) and 'Brahman' (ultimate reality) are extensively discussed in:", options: ["Samhitas", "Brahmanas", "Aranyakas", "Upanishads"], correctAnswerIndex: 3 }, { question: "What was the primary medium of exchange in the Vedic period before the advent of coined money?", options: ["Gold coins (Nishka)", "Cows and Nishka (gold ornaments)", "Silver punch-marked coins", "Barter system only"], correctAnswerIndex: 1 }, { question: "The 'Rajasuya' and 'Ashvamedha' were types of:", options: ["Marriage ceremonies", "Royal consecration sacrifices", "Agricultural festivals", "Judicial assemblies"], correctAnswerIndex: 1 }, { question: "Which Mahajanapada was located furthest to the northwest of the Indian subcontinent?", options: ["Gandhara", "Kamboja", "Avanti", "Matsya"], correctAnswerIndex: 0 }, { question: "Taxila, a famous center of learning, was the capital of which Mahajanapada?", options: ["Kashi", "Kosala", "Gandhara", "Magadha"], correctAnswerIndex: 2 }, { question: "The term 'Purohita' in the Vedic age referred to the:", options: ["King's commander-in-chief", "Royal priest", "Village headman", "Tax collector"], correctAnswerIndex: 1 }, { question: "Which of the following was a prominent republican Mahajanapada, besides Vajji?", options: ["Magadha", "Kosala", "Malla", "Avanti"], correctAnswerIndex: 2 }, { question: "The Iron Age in India is generally considered to have begun around:", options: ["3000 BCE", "2000 BCE", "1000 BCE", "500 BCE"], correctAnswerIndex: 2 }, { question: "What does 'Yajurveda' primarily deal with?", options: ["Melodies and chants", "Procedures for sacrifices and rituals", "Magical spells and charms", "Philosophical discourses"], correctAnswerIndex: 1 }, { question: "The social division in the Rigvedic period was primarily based on:", options: ["Birth", "Occupation and Varna", "Wealth", "Territory"], correctAnswerIndex: 1 }, { question: "Who was Prasenajit (Pasenadi)?", options: ["A king of Magadha", "A king of Kosala contemporary to Buddha", "A Nanda ruler", "A king of Avanti"], correctAnswerIndex: 1 }, { question: "The earliest law books or codes of conduct in ancient India are known as:", options: ["Vedas", "Upanishads", "Dharmasutras and Dharmashastras", "Puranas"], correctAnswerIndex: 2 }, { question: "What was the significance of Pataliputra's location for Magadha's power?", options: ["Rich iron ore deposits nearby", "Confluence of major rivers (Ganga, Son, Gandak)", "Proximity to Himalayan trade routes", "Dry climate suitable for grain storage"], correctAnswerIndex: 1 }, { question: "The term 'Janapada' literally means:", options: ["The king's domain", "The place where the tribe (Jana) sets its foot", "A fortified city", "A sacrificial altar"], correctAnswerIndex: 1 }, { question: "Which of these was NOT a major factor in Magadha's rise to prominence?", options: ["Fertile agricultural land", "Abundant elephant supply for army", "Strong maritime trade network", "Strategic location and ambitious rulers"], correctAnswerIndex: 2 }, { question: "The 'Shatapatha Brahmana' is a commentary associated with which Veda?", options: ["Rigveda", "Samaveda", "Yajurveda", "Atharvaveda"], correctAnswerIndex: 2 }, { question: "The concept of 'Rita' in Vedic thought refers to:", options: ["Wealth and prosperity", "Cosmic order and moral law", "A specific type of sacrifice", "The king's authority"], correctAnswerIndex: 1 }, { question: "What was the main form of government in most Mahajanapadas?", options: ["Republican", "Monarchical", "Oligarchical", "Theocratic"], correctAnswerIndex: 1 }, { question: "The 'Atharvaveda' contains:", options: ["Hymns for Soma sacrifice", "Melodies for chanting", "Spells, charms, and incantations for everyday life", "Rules for royal consecration"], correctAnswerIndex: 2 }, { question: "The six schools of orthodox Hindu philosophy (Shad Darshanas) evolved primarily during which period?", options: ["Early Vedic", "Later Vedic and Post-Vedic (Sutra period)", "Mauryan period", "Gupta period"], correctAnswerIndex: 1 }, { question: "Which Mahajanapada was known for its fine cotton textiles and was located on the banks of Yamuna?", options: ["Kuru", "Panchala", "Matsya", "Vatsa"], correctAnswerIndex: 3 }, { question: "The end of the Mahajanapada period is marked by the rise of which empire?", options: ["Gupta Empire", "Kushan Empire", "Mauryan Empire", "Harshavardhana's Empire"], correctAnswerIndex: 2 }] }
         };
+        console.log("quizBank defined.");
 
-        // --- Gemini API Integration ---
-        const geminiApiKey = "";
-        const geminiApiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${geminiApiKey}`;
-
-        async function callGeminiAPI(prompt, buttonElement, loadingIndicatorElement, targetDiv) {
+        console.log("Defining callGeminiAPI function...");
+        async function callGeminiAPI(prompt, buttonElement, loadingIndicatorElement, targetDiv) { /* ... (implementation unchanged) ... */
             if (buttonElement) buttonElement.disabled = true;
             if (loadingIndicatorElement) loadingIndicatorElement.classList.remove('hidden');
             if (targetDiv) {
                 targetDiv.innerHTML = '';
                 targetDiv.classList.add('hidden');
             }
-
             let chatHistory = [{ role: "user", parts: [{ text: prompt }] }];
             const payload = { contents: chatHistory };
-
             try {
                 const response = await fetch(geminiApiUrl, {
                     method: 'POST',
@@ -384,7 +439,6 @@
                     throw new Error(`API request failed with status ${response.status}: ${response.statusText}. Body: ${errorBody}`);
                 }
                 const result = await response.json();
-
                 if (result.candidates && result.candidates.length > 0 &&
                     result.candidates[0].content && result.candidates[0].content.parts &&
                     result.candidates[0].content.parts.length > 0) {
@@ -411,60 +465,130 @@
                 if (loadingIndicatorElement) loadingIndicatorElement.classList.add('hidden');
             }
         }
+        console.log("callGeminiAPI function defined. Type:", typeof callGeminiAPI);
 
-        // --- Quiz Logic ---
+        console.log("Defining loadAndShowQuiz function...");
         function loadAndShowQuiz(quizId, quizTitle) {
+            console.log("loadAndShowQuiz called with ID:", quizId, "Title:", quizTitle);
             const quiz = quizBank[quizId];
             if (!quiz) {
                 console.error("Quiz not found:", quizId);
                 return;
             }
             currentQuizQuestions = quiz.data;
+            currentQuizId = quizId;
+            userAnswers = {}; // Reset user answers for the new quiz
             quizViewTitleEl.textContent = quizTitle || quiz.title;
             renderQuizQuestions();
             resetQuizState();
+            if (quiz.summaryPrompt && summarizeBtnTextEl) { // Check if summarizeBtnTextEl exists
+                summarizeBtnEl.classList.remove('hidden');
+                summarizeBtnTextEl.textContent = `✨ Summarize Key Concepts (${quiz.title.replace("Rahul's Quiz: ", "")}) `;
+            } else {
+                summarizeBtnEl.classList.add('hidden');
+            }
             showPage('page-quiz-view');
         }
+        console.log("loadAndShowQuiz function defined. Type:", typeof loadAndShowQuiz);
 
+        console.log("Defining renderQuizQuestions function...");
         function renderQuizQuestions() {
             quizFormContainerEl.innerHTML = '';
             currentQuizQuestions.forEach((q, index) => {
                 const questionBlock = document.createElement('div');
                 questionBlock.className = 'question-block';
                 questionBlock.id = `question-${index}`;
-
                 const questionTextElement = document.createElement('p');
                 questionTextElement.className = 'question-text';
                 questionTextElement.textContent = `${index + 1}. ${q.question}`;
                 questionBlock.appendChild(questionTextElement);
 
+                const optionsContainer = document.createElement('div');
+                optionsContainer.className = 'options-container';
+
                 q.options.forEach((option, optionIndex) => {
                     const label = document.createElement('label');
                     label.className = 'option-label';
+                    label.dataset.questionIndex = index; // Store question index
+                    label.dataset.optionIndex = optionIndex; // Store option index
+
                     const radioInput = document.createElement('input');
                     radioInput.type = 'radio';
                     radioInput.name = `question${index}`;
                     radioInput.value = optionIndex;
+                    // Radio input itself will be visually hidden or very small, label handles click
+                    radioInput.classList.add('sr-only'); // Tailwind class to hide visually but keep accessible
+
                     label.appendChild(radioInput);
                     label.appendChild(document.createTextNode(option));
-                    questionBlock.appendChild(label);
+                    optionsContainer.appendChild(label);
+
+                    label.addEventListener('click', handleOptionClick);
                 });
+                questionBlock.appendChild(optionsContainer);
                 quizFormContainerEl.appendChild(questionBlock);
             });
         }
+        console.log("renderQuizQuestions function defined.");
 
+        function handleOptionClick(event) {
+            const clickedLabel = event.currentTarget;
+            const questionIndex = parseInt(clickedLabel.dataset.questionIndex);
+            const selectedOptionIndex = parseInt(clickedLabel.dataset.optionIndex);
+
+            // Prevent further clicks if this question has already been answered
+            if (userAnswers.hasOwnProperty(questionIndex)) {
+                return;
+            }
+
+            userAnswers[questionIndex] = selectedOptionIndex; // Record user's choice
+
+            const questionData = currentQuizQuestions[questionIndex];
+            const correctOptionIndex = questionData.correctAnswerIndex;
+            const allOptionLabelsForThisQuestion = clickedLabel.closest('.options-container').querySelectorAll('.option-label');
+
+            allOptionLabelsForThisQuestion.forEach(label => {
+                const optIdx = parseInt(label.dataset.optionIndex);
+                label.classList.add('disabled-option'); // Visually indicate disabled
+                // Disable the actual radio button inside this label
+                const radioInside = label.querySelector('input[type="radio"]');
+                if(radioInside) radioInside.disabled = true;
+
+
+                if (optIdx === selectedOptionIndex) {
+                    if (selectedOptionIndex === correctOptionIndex) {
+                        label.classList.add('correct-live');
+                    } else {
+                        label.classList.add('wrong-live');
+                    }
+                }
+                // Also highlight the correct answer if a wrong one was chosen
+                if (selectedOptionIndex !== correctOptionIndex && optIdx === correctOptionIndex) {
+                    label.classList.add('correct-live');
+                }
+                 // Ensure the radio button corresponding to the clicked label is checked
+                if (optIdx === selectedOptionIndex && radioInside) {
+                    radioInside.checked = true;
+                }
+            });
+        }
+
+
+        console.log("Defining resetQuizState function...");
         function resetQuizState() {
             quizResultSectionEl.classList.add('hidden');
             solutionsContainerEl.innerHTML = '';
-            differencesSummaryContainerEl.innerHTML = '';
-            differencesSummaryContainerEl.classList.add('hidden');
+            summaryContainerEl.innerHTML = ''; // Use updated ID
+            summaryContainerEl.classList.add('hidden');
             submitQuizBtnEl.classList.remove('hidden');
             submitQuizBtnEl.disabled = false;
-            const summaryLoadingIndicator = summarizeDifferencesBtnEl.querySelector('.loading-indicator');
+            const summaryLoadingIndicator = summarizeBtnEl.querySelector('.loading-indicator'); // Use updated ID
             if(summaryLoadingIndicator) summaryLoadingIndicator.classList.add('hidden');
-            summarizeDifferencesBtnEl.disabled = false;
-        }
+            summarizeBtnEl.disabled = false;
+         }
+        console.log("resetQuizState function defined.");
 
+        console.log("Defining showCelebration function...");
         function showCelebration() {
             celebrationModalEl.classList.add('visible');
             setTimeout(() => {
@@ -473,48 +597,125 @@
                 quizResultSectionEl.scrollIntoView({ behavior: 'smooth' });
             }, 2500);
         }
+        console.log("showCelebration function defined.");
 
-        function handleSubmitQuiz() {
+        console.log("Defining saveUserScore function...");
+        async function saveUserScore(userName, quizId, quizTitle, score, totalQuestions) {
+            if (!db || !userId) {
+                console.error("Firestore not initialized or user not authenticated. Cannot save score.");
+                return;
+            }
+            try {
+                const scoresCollectionPath = `/artifacts/${appId}/public/data/quizScores`;
+                await addDoc(collection(db, scoresCollectionPath), {
+                    userName: userName,
+                    quizId: quizId,
+                    quizTitle: quizTitle,
+                    score: score,
+                    totalQuestions: totalQuestions,
+                    userId: userId,
+                    timestamp: Timestamp.now()
+                });
+                console.log("Score saved to Firestore successfully!");
+            } catch (e) {
+                console.error("Error adding document to Firestore: ", e);
+            }
+        }
+        console.log("saveUserScore function defined.");
+
+        console.log("Defining renderUserScoresPage function...");
+        async function renderUserScoresPage() { /* ... (implementation unchanged) ... */
+             if (!db) {
+                scoresTableContainerEl.innerHTML = '<p>Score service is currently unavailable.</p>';
+                loadingScoresMessageEl.classList.add('hidden');
+                noScoresMessageEl.classList.add('hidden');
+                return;
+            }
+            scoresTableContainerEl.innerHTML = '';
+            loadingScoresMessageEl.classList.remove('hidden');
+            noScoresMessageEl.classList.add('hidden');
+            try {
+                const scoresCollectionPath = `/artifacts/${appId}/public/data/quizScores`;
+                const q = query(collection(db, scoresCollectionPath), firestoreOrderBy("timestamp", "desc"));
+                const querySnapshot = await getDocs(q);
+                if (querySnapshot.empty) {
+                    noScoresMessageEl.classList.remove('hidden');
+                    loadingScoresMessageEl.classList.add('hidden');
+                    return;
+                }
+                const table = document.createElement('table');
+                const thead = document.createElement('thead');
+                const tbody = document.createElement('tbody');
+                const headerRow = document.createElement('tr');
+                ['User Name', 'Quiz Name', 'Score', 'Date Taken'].forEach(text => {
+                    const th = document.createElement('th');
+                    th.textContent = text;
+                    headerRow.appendChild(th);
+                });
+                thead.appendChild(headerRow);
+                table.appendChild(thead);
+                querySnapshot.forEach((doc) => {
+                    const record = doc.data();
+                    const row = document.createElement('tr');
+                    ['userName', 'quizTitle'].forEach(key => {
+                        const cell = document.createElement('td');
+                        cell.textContent = record[key];
+                        row.appendChild(cell);
+                    });
+                    const cellScore = document.createElement('td');
+                    cellScore.textContent = `${record.score} / ${record.totalQuestions}`;
+                    row.appendChild(cellScore);
+                    const cellDate = document.createElement('td');
+                    cellDate.textContent = record.timestamp ? record.timestamp.toDate().toLocaleString() : 'N/A';
+                    row.appendChild(cellDate);
+                    tbody.appendChild(row);
+                });
+                table.appendChild(tbody);
+                scoresTableContainerEl.appendChild(table);
+                loadingScoresMessageEl.classList.add('hidden');
+            } catch (e) {
+                console.error("Error fetching scores from Firestore: ", e);
+                scoresTableContainerEl.innerHTML = '<p>Could not load scores. Please try again later.</p>';
+                loadingScoresMessageEl.classList.add('hidden');
+                noScoresMessageEl.classList.add('hidden');
+            }
+        }
+        console.log("renderUserScoresPage function defined.");
+
+        console.log("Defining handleSubmitQuiz function...");
+        async function handleSubmitQuiz() {
             let score = 0;
-            solutionsContainerEl.innerHTML = '';
+            solutionsContainerEl.innerHTML = ''; // Clear previous solutions if any
 
             currentQuizQuestions.forEach((q, index) => {
-                const questionBlock = document.getElementById(`question-${index}`);
-                const selectedOptionInput = quizFormContainerEl.querySelector(`input[name="question${index}"]:checked`);
-                const optionsLabels = questionBlock.querySelectorAll('.option-label');
-                let userAnswerIndex = -1;
-                if (selectedOptionInput) {
-                    userAnswerIndex = parseInt(selectedOptionInput.value);
-                }
+                const userAnswerIndex = userAnswers[index]; // Get stored answer
                 const isCorrect = (userAnswerIndex === q.correctAnswerIndex);
-                if (isCorrect) score++;
+                if (isCorrect) {
+                    score++;
+                }
 
-                optionsLabels.forEach((label, optionIdx) => {
-                    label.classList.remove('selected-correct', 'selected-wrong', 'correct-option', 'wrong-option');
-                    if (optionIdx === q.correctAnswerIndex) label.classList.add('correct-option');
-                    if (optionIdx === userAnswerIndex) label.classList.add(isCorrect ? 'selected-correct' : 'selected-wrong');
-                });
-
+                // Solution display logic (similar to before, but confirms the already shown feedback)
                 const solutionItem = document.createElement('div');
                 solutionItem.className = 'solution-item';
                 const solutionQuestionText = document.createElement('p');
                 solutionQuestionText.className = 'question-text';
                 solutionQuestionText.textContent = `${index + 1}. ${q.question}`;
                 solutionItem.appendChild(solutionQuestionText);
+
                 const correctAnswerText = document.createElement('p');
                 correctAnswerText.className = 'correct-answer';
                 correctAnswerText.textContent = `Correct Answer: ${q.options[q.correctAnswerIndex]}`;
                 solutionItem.appendChild(correctAnswerText);
 
-                if (userAnswerIndex !== -1) {
+                if (userAnswerIndex !== undefined) { // Check if user answered
                     const yourAnswerText = document.createElement('p');
                     yourAnswerText.textContent = `Your Answer: ${q.options[userAnswerIndex]}`;
-                    if (!isCorrect) yourAnswerText.classList.add('your-answer');
+                    if (!isCorrect) yourAnswerText.classList.add('your-answer'); // Style if wrong
                     solutionItem.appendChild(yourAnswerText);
                 } else {
                     const noAnswerText = document.createElement('p');
                     noAnswerText.textContent = `Your Answer: Not Attempted`;
-                    noAnswerText.classList.add('your-answer');
+                    noAnswerText.classList.add('your-answer'); // Style as wrong if not attempted
                     solutionItem.appendChild(noAnswerText);
                 }
 
@@ -528,7 +729,7 @@
                 const explanationDiv = document.createElement('div');
                 explanationDiv.className = 'gemini-explanation hidden';
                 explanationButton.addEventListener('click', () => {
-                    const prompt = `Provide a concise explanation for the following quiz question and its correct answer. Focus on the historical and philosophical context relevant to Buddhism or Jainism. Question: "${q.question}" Correct Answer: "${q.options[q.correctAnswerIndex]}". Keep the explanation to a few sentences.`;
+                    const prompt = `Provide a concise explanation for the following SSC CGL level history quiz question and its correct answer. Focus on the historical context. Question: "${q.question}" Correct Answer: "${q.options[q.correctAnswerIndex]}". Keep the explanation to a few sentences.`;
                     callGeminiAPI(prompt, explanationButton, loadingIndicator, explanationDiv);
                 });
                 solutionItem.appendChild(explanationButton);
@@ -537,22 +738,93 @@
             });
 
             scoreTextEl.textContent = `You scored ${score} out of ${currentQuizQuestions.length} questions!`;
+            if (loggedInUserName && currentQuizId && quizBank[currentQuizId]) {
+                await saveUserScore(loggedInUserName, currentQuizId, quizBank[currentQuizId].title, score, currentQuizQuestions.length);
+            } else {
+                console.warn("Could not save score: User name or quiz details missing.");
+            }
             submitQuizBtnEl.classList.add('hidden');
             showCelebration();
         }
+        console.log("handleSubmitQuiz function defined.");
 
-        // --- Event Listeners ---
+        console.log("Defining login modal functions...");
+        function displayLoginModal() {
+            loginModalEl.classList.add('visible');
+            document.body.classList.add('modal-open');
+            if(mainContentAreaEl) mainContentAreaEl.classList.add('blurred');
+        }
+        function hideLoginModal() {
+            loginModalEl.classList.remove('visible');
+            document.body.classList.remove('modal-open');
+            if(mainContentAreaEl) mainContentAreaEl.classList.remove('blurred');
+        }
+        console.log("Login modal functions defined.");
+
+        console.log("Adding loginForm submit listener...");
+        loginFormEl.addEventListener('submit', function(event) {
+            event.preventDefault();
+            let isValid = true;
+            nameErrorEl.textContent = '';
+            const name = loginNameInput.value.trim();
+            if (name === '') {
+                nameErrorEl.textContent = 'Name is required.';
+                isValid = false;
+            }
+            if (isValid) {
+                loggedInUserName = name;
+                if(welcomeUserNameEl) welcomeUserNameEl.innerHTML = `Welcome to Interactive Quiz, <span style="font-weight:600;">${loggedInUserName}</span>!`; // Updated welcome message
+                console.log('Login Successful for:', loggedInUserName);
+                if (auth && auth.currentUser) {
+                    hideLoginModal();
+                    showPage('page-home', document.querySelector('nav a[onclick*="page-home"]'));
+                } else {
+                    console.log("Login form submitted, waiting for Firebase auth to complete to hide modal.");
+                }
+            }
+        });
+        console.log("loginForm submit listener added.");
+
+        console.log("Adding submitQuizBtn click listener...");
         submitQuizBtnEl.addEventListener('click', handleSubmitQuiz);
-        summarizeDifferencesBtnEl.addEventListener('click', () => {
-            const loadingIndicator = summarizeDifferencesBtnEl.querySelector('.loading-indicator');
-            const prompt = "Provide a concise summary highlighting 3-4 key philosophical and practical differences between Buddhism and Jainism. Format the output clearly, perhaps using bullet points for each religion or for each point of difference.";
-            callGeminiAPI(prompt, summarizeDifferencesBtnEl, loadingIndicator, differencesSummaryContainerEl);
-        });
+        console.log("submitQuizBtn click listener added.");
 
-        // Initialize
-        document.addEventListener('DOMContentLoaded', () => {
-            showPage('page-home', document.querySelector('nav a[onclick*="page-home"]'));
+        console.log("Adding summarizeBtn click listener...");
+        summarizeBtnEl.addEventListener('click', () => { // Use updated ID
+            const quizConfig = quizBank[currentQuizId];
+            if (quizConfig && quizConfig.summaryPrompt) {
+                const loadingIndicator = summarizeBtnEl.querySelector('.loading-indicator'); // Use updated ID
+                callGeminiAPI(quizConfig.summaryPrompt, summarizeBtnEl, loadingIndicator, summaryContainerEl); // Use updated ID
+            } else {
+                console.log("No summary prompt found for quiz ID:", currentQuizId);
+                summaryContainerEl.innerHTML = "No summary available for this topic."; // Use updated ID
+                summaryContainerEl.classList.remove('hidden');
+            }
         });
+        console.log("summarizeBtn click listener added.");
+
+        console.log("Adding DOMContentLoaded listener...");
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log("DOM Content Loaded. Initializing page state.");
+            console.log("Initial loggedInUserName:", loggedInUserName);
+            if (!loggedInUserName) {
+                 displayLoginModal();
+            }
+            if (typeof window.showPage !== 'function') window.showPage = showPage;
+            if (typeof window.navigateToQuizList !== 'function') window.navigateToQuizList = navigateToQuizList;
+            if (typeof window.loadAndShowQuiz !== 'function') window.loadAndShowQuiz = loadAndShowQuiz;
+            console.log("Global functions ensured on window object post DOMContentLoaded (if not already).");
+            console.log("Type of window.loadAndShowQuiz after DOMContentLoaded assignment:", typeof window.loadAndShowQuiz);
+        });
+        console.log("DOMContentLoaded listener added.");
+
+        console.log("Assigning functions to window object (top level)...");
+        console.log("Type of loadAndShowQuiz before assignment to window:", typeof loadAndShowQuiz);
+        window.showPage = showPage;
+        window.navigateToQuizList = navigateToQuizList;
+        window.loadAndShowQuiz = loadAndShowQuiz;
+        console.log("Functions assigned to window object. Type of window.loadAndShowQuiz:", typeof window.loadAndShowQuiz);
+        console.log("Script module execution finished.");
     </script>
 </body>
 </html>
