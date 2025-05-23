@@ -435,8 +435,8 @@
                      <p class="mb-4 text-center text-sm text-gray-600">Enter admin credentials to view messages.</p>
                     <form id="adminLoginForm">
                         <div class="form-group">
-                            <label for="adminUsername">Username:</label>
-                            <input type="text" id="adminUsername" name="adminUsername" required>
+                            <label for="adminEmail">Admin Email:</label>
+                            <input type="email" id="adminEmail" name="adminEmail" required autocomplete="email">
                         </div>
                         <div class="form-group">
                             <label for="adminPassword">Password:</label>
@@ -491,7 +491,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, collection, addDoc, getDocs, Timestamp, query, orderBy as firestoreOrderBy } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // --- IMPORTANT CONFIGURATION ---
@@ -591,7 +591,7 @@
         const contactFormFeedbackEl = document.getElementById('contactFormFeedback');
 
         const adminLoginFormEl = document.getElementById('adminLoginForm');
-        const adminUsernameInputEl = document.getElementById('adminUsername');
+        const adminEmailInputEl = document.getElementById('adminEmail');
         const adminPasswordInputEl = document.getElementById('adminPassword');
         const adminLoginFeedbackEl = document.getElementById('adminLoginFeedback');
         const adminNavLinkEl = document.getElementById('adminNavLink');
@@ -1127,36 +1127,69 @@
             }
         }
 
-        function handleAdminLogin(event) {
-            event.preventDefault();
-            if (!adminUsernameInputEl || !adminPasswordInputEl || !adminLoginFeedbackEl) return;
+        async function handleAdminLogin(event) {
+    event.preventDefault();
+    // Make sure you updated the variable name above to adminEmailInputEl
+    if (!adminEmailInputEl || !adminPasswordInputEl || !adminLoginFeedbackEl) {
+        console.error("Admin login form elements are not correctly referenced in JavaScript!");
+        return;
+    }
 
-            const username = adminUsernameInputEl.value;
-            const password = adminPasswordInputEl.value;
+    const email = adminEmailInputEl.value; // Uses the email input
+    const password = adminPasswordInputEl.value;
 
-            // !!! --- SECURITY WARNING --- !!!
-            // This is a highly insecure way to handle admin login.
-            // Credentials should NEVER be hardcoded or checked client-side in a real application.
-            // This is for demonstration purposes ONLY.
-            // Real admin authentication requires a secure backend system.
-            if (username === "RITIKRAHUL" && password === "Rahul3288@") {
-                isAdminLoggedIn = true;
-                adminLoginFeedbackEl.classList.add('hidden'); // Hide any previous error
-                adminUsernameInputEl.value = ''; // Clear fields
-                adminPasswordInputEl.value = '';
-                showPage('page-admin-dashboard', adminNavLinkEl);
-            } else {
-                isAdminLoggedIn = false;
-                displayFormFeedback(adminLoginFeedbackEl, "Invalid admin username or password.", false);
-            }
-        }
+    adminLoginFeedbackEl.classList.add('hidden'); // Hide old messages
 
-        function logoutAdmin() {
+    if (!firebaseInitialized || !auth) {
+        displayFormFeedback(adminLoginFeedbackEl, "Authentication system is not ready. Please try again.", false);
+        return;
+    }
+
+    try {
+        // Ask Firebase to sign in with the email and password
+        const userCredential = await signInWithEmailAndPassword(auth, email, password);
+        const user = userCredential.user;
+
+        // IMPORTANT: This is your specific admin email address
+        const DESIGNATED_ADMIN_EMAIL = "ritikrahul909@gmail.com";
+
+        if (user.email === DESIGNATED_ADMIN_EMAIL) {
+            // If Firebase login was successful AND the email matches your admin email
+            isAdminLoggedIn = true;
+            adminEmailInputEl.value = ''; // Clear form
+            adminPasswordInputEl.value = '';
+            showPage('page-admin-dashboard', adminNavLinkEl);
+        } else {
+            // Firebase login was okay, but not for the admin account
             isAdminLoggedIn = false;
-            // Optionally, clear any admin-specific data from session/local storage if used
-            showPage('page-home', document.querySelector('nav a[onclick*="page-home"]'));
-            if (adminNavLinkEl) adminNavLinkEl.textContent = "Admin"; // Reset nav link text
+            displayFormFeedback(adminLoginFeedbackEl, "Login successful, but not an authorized admin account.", false);
+            await auth.signOut(); // Sign out this non-admin user
         }
+
+    } catch (error) {
+        // Firebase login failed (wrong email, wrong password, etc.)
+        isAdminLoggedIn = false;
+        console.error("Admin Login Failed (Firebase):", error.code, error.message);
+        displayFormFeedback(adminLoginFeedbackEl, "Invalid Admin Email or Password. Please try again.", false);
+    }
+}
+
+        async function logoutAdmin() {
+    isAdminLoggedIn = false;
+
+    if (firebaseInitialized && auth && auth.currentUser) {
+        try {
+            await auth.signOut(); // Sign out from Firebase
+            console.log("Admin signed out from Firebase.");
+        } catch (error) {
+            console.error("Error signing out admin from Firebase:", error);
+        }
+    }
+    // The onAuthStateChanged listener will automatically try to sign in an anonymous user
+
+    showPage('page-home', document.querySelector('nav a[onclick*="page-home"]'));
+    if (adminNavLinkEl) adminNavLinkEl.textContent = "Admin";
+}
 
 
         // Event Listeners
